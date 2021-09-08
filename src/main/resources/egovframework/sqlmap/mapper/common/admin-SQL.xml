@@ -1,0 +1,3173 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="admin">
+	
+	<select id="selectUserMap" resultType="EgovMap">
+		<![CDATA[
+			SELECT u_id
+				   ,u_nm
+				   ,u_hp
+				   ,c_nm
+				   ,
+				   CASE u_auth WHEN 'R'        THEN '관리자'
+	                   WHEN 'B' THEN '일반 사용자'
+	                   WHEN 'N'     THEN '미승인 사용자'
+					   END AS auth_list
+				   ,c_dt
+			FROM a_01_info
+			]]>
+	</select>
+	
+	<select id="selectAdminCnt" parameterType="EgovMap" resultType="int">
+		<![CDATA[
+			SELECT COUNT(*) AS CNT FROM a_01_info
+		]]>
+	</select>
+	
+	<update id="updateAdminCnt" parameterType="EgovMap">
+		UPDATE a_01_info SET
+		<choose>
+			<when test="auth eq 1">
+			u_auth = 'R'
+			</when>
+			<when test="auth eq 2">
+			u_auth = 'B'
+			</when>
+			<when test="auth eq 3">
+			u_auth = 'N'
+			</when>
+		</choose>
+		 WHERE u_id	  = #{uId} 
+	</update>
+	
+	<insert id="messageSend" parameterType="EgovMap">
+		<![CDATA[
+			INSERT INTO message(
+					message_id
+					,sender
+					,reciever
+					,title
+					,contents
+					,send_date
+					,recieve_date)
+			VALUES (
+					nextval('message_message_id_seq')
+					,(select id from a_01_info where u_id=#{adminId })
+					,(select id from a_01_info where u_id=#{email })
+					,#{title }
+					,#{contents }
+					,default
+					,null);
+		]]>	
+	</insert>
+	
+	<delete id="UserDelete" parameterType="EgovMap">
+		<![CDATA[
+			DELETE FROM a_01_info WHERE u_id = #{uId} 
+		 ]]>
+	</delete>
+	
+	<select id="selectNoticeList" resultType="EgovMap">
+		<![CDATA[
+			select * from notice
+		]]>
+	</select>
+	
+	<select id="selectNoticeView" resultType="EgovMap">
+		<![CDATA[
+			select * from notice where n_no = #{nNo}::integer
+		]]>
+	</select>
+	
+	<insert id="insetNoticeSaveBoard" parameterType="EgovMap">
+		<![CDATA[
+			INSERT INTO notice(
+					u_id
+					,u_nm
+					,title
+					,content
+					,write_day
+					)
+			VALUES (
+					#{adminId }
+					,#{adminNm }
+					,#{title }
+					,#{content }
+					,now()
+					);
+		]]>	
+	</insert>
+	
+	<update id="noticeModifySave" parameterType="EgovMap">
+		<![CDATA[
+			UPDATE notice SET title=#{title } , content = #{content } WHERE n_no= #{nNo } ::integer
+		 ]]>
+	</update>
+	
+	<delete id="noticeDelete" parameterType="EgovMap">
+		<![CDATA[
+			DELETE FROM notice WHERE n_no = #{nNo }::integer
+		 ]]>
+	</delete>
+	
+	<select id="selectCreateingCampaignList" resultType="EgovMap">
+		<![CDATA[
+			select u_id, c_tit, c_advr, s_dt, e_dt, campaign.c_dt::date, c_ctxt, 
+    			case c_prgs_stts::integer
+        		when 1 then '생성중'
+        		when 2 then '예약중'
+        		when 3 then '매체검토'
+        		when 4 then '캠페인확정'
+        		when 5 then '소재검수'
+        		when 6 then '진행중'
+        		when 7 then '종료' end as prgss
+    		from campaign, a_01_info
+       		where campaign.c_wrtr::integer = a_01_info.id::integer
+       		AND campaign.c_prgs_stts = '1'
+       		ORDER BY campaign.c_dt DESC;
+		]]>
+	</select>
+	
+	<select id="selectReservationCampaignList" resultType="EgovMap">
+		<![CDATA[
+			select u_id, c_tit, c_advr, s_dt, e_dt, campaign.c_dt::date, c_ctxt, 
+    			case c_prgs_stts::integer
+        		when 1 then '생성중'
+        		when 2 then '예약중'
+        		when 3 then '매체검토'
+        		when 4 then '캠페인확정'
+        		when 5 then '소재검수'
+        		when 6 then '진행중'
+        		when 7 then '종료' end as prgss
+    		from campaign, a_01_info
+       		where campaign.c_wrtr::integer = a_01_info.id::integer
+       		AND campaign.c_prgs_stts = '2'
+       		ORDER BY campaign.c_dt DESC;
+		]]>
+	</select>
+	
+	<select id="selectReviewCampaignList" resultType="EgovMap">
+		<![CDATA[
+			select u_id, c_tit, c_advr, s_dt, e_dt, campaign.c_dt::date, c_ctxt, 
+    			case c_prgs_stts::integer
+        		when 1 then '생성중'
+        		when 2 then '예약중'
+        		when 3 then '매체검토'
+        		when 4 then '캠페인확정'
+        		when 5 then '소재검수'
+        		when 6 then '진행중'
+        		when 7 then '종료' end as prgss
+    		from campaign, a_01_info
+       		where campaign.c_wrtr::integer = a_01_info.id::integer
+       		AND campaign.c_prgs_stts = '3'
+       		ORDER BY campaign.c_dt DESC;
+		]]>
+	</select>
+	
+	<select id="selectConfirmCampaignList" resultType="EgovMap">
+		<![CDATA[
+			select u_id, c_tit, c_advr, s_dt, e_dt, campaign.c_dt::date, c_ctxt, 
+    			case c_prgs_stts::integer
+        		when 1 then '생성중'
+        		when 2 then '예약중'
+        		when 3 then '매체검토'
+        		when 4 then '캠페인확정'
+        		when 5 then '소재검수'
+        		when 6 then '진행중'
+        		when 7 then '종료' end as prgss
+    		from campaign, a_01_info
+       		where campaign.c_wrtr::integer = a_01_info.id::integer
+       		AND campaign.c_prgs_stts = '4'
+       		ORDER BY campaign.c_dt DESC;
+		]]>
+	</select>
+	
+	<select id="selectInspectionCampaignList" resultType="EgovMap">
+		<![CDATA[
+			select u_id, c_tit, c_advr, s_dt, e_dt, campaign.c_dt::date, c_ctxt, 
+    			case c_prgs_stts::integer
+        		when 1 then '생성중'
+        		when 2 then '예약중'
+        		when 3 then '매체검토'
+        		when 4 then '캠페인확정'
+        		when 5 then '소재검수'
+        		when 6 then '진행중'
+        		when 7 then '종료' end as prgss
+    		from campaign, a_01_info
+       		where campaign.c_wrtr::integer = a_01_info.id::integer
+       		AND campaign.c_prgs_stts = '5'
+       		ORDER BY campaign.c_dt DESC;
+		]]>
+	</select>
+	
+	<select id="selectProgreesCampaignList" resultType="EgovMap">
+		<![CDATA[
+			select u_id, c_tit, c_advr, s_dt, e_dt, campaign.c_dt::date, c_ctxt, 
+    			case c_prgs_stts::integer
+        		when 1 then '생성중'
+        		when 2 then '예약중'
+        		when 3 then '매체검토'
+        		when 4 then '캠페인확정'
+        		when 5 then '소재검수'
+        		when 6 then '진행중'
+        		when 7 then '종료' end as prgss
+    		from campaign, a_01_info
+       		where campaign.c_wrtr::integer = a_01_info.id::integer
+       		AND campaign.c_prgs_stts = '6'
+       		ORDER BY campaign.c_dt DESC;
+		]]>
+	</select>
+	
+	<select id="selectEndCampaignList" resultType="EgovMap">
+		<![CDATA[
+			select u_id, c_tit, c_advr, s_dt, e_dt, campaign.c_dt::date, c_ctxt, 
+    			case c_prgs_stts::integer
+        		when 1 then '생성중'
+        		when 2 then '예약중'
+        		when 3 then '매체검토'
+        		when 4 then '캠페인확정'
+        		when 5 then '소재검수'
+        		when 6 then '진행중'
+        		when 7 then '종료' end as prgss
+    		from campaign, a_01_info
+       		where campaign.c_wrtr::integer = a_01_info.id::integer
+       		AND campaign.c_prgs_stts = '7'
+       		ORDER BY campaign.c_dt DESC;
+		]]>
+	</select>
+	
+	<update id="updateCapmaignPrgss" parameterType="EgovMap">
+		<![CDATA[
+			UPDATE CAMPAIGN SET C_PRGS_STTS = #{prgss}, IS_NW = 'Y' WHERE C_CTXT = #{cCtxt} 
+		 ]]>
+	</update>
+	
+	<insert id="insetPrgssChangeMessage" parameterType="EgovMap">
+		<![CDATA[
+			insert into message values(nextval('message_message_id_seq'), 1, (select id from a_01_info where u_id = #{uId}), '캠페인 진행단계 변경알림', '신청하신 캠페인에 대한 진행단계가 변경되었습니다. 캠페인 정보에서 확인해주세요.', (select now()), NULL);
+		]]>
+	</insert>
+	
+	<select id="selectShelterList" resultType="EgovMap">
+		<![CDATA[
+			select 	rnum,
+					A.gid,
+					A.shelter_nm,
+					A.shelter_dvsn_nm,
+					A.media_id,
+					A.sgg_nm,
+					A.emd_nm,
+					A.ad_type,
+					A.ad_rating,
+					A.sug_area,
+					A.lighting,
+					A.ad_price_month,
+					A.ad_make_price,
+					A.inner_size,
+					A.outer_size
+			from (
+   				 select  ROW_NUMBER() OVER() as rnum,
+						 gid,
+						 shelter_nm,
+						 shelter_dvsn_nm,
+						 media_id,
+						 sgg_nm,
+						 emd_nm,
+						 ad_type,
+						 ad_rating,
+						 sug_area,
+						 lighting,
+						 ad_price_month,
+						 ad_make_price,
+						 inner_size,
+						 outer_size
+    			from shelter
+    			where shelter_dvsn_nm = '가로변버스'
+    			AND is_del = 'N'
+    	]]>
+		<if test="keyword != null and keyword != '' ">		
+			AND shelter_nm like CONCAT('%', #{keyword}, '%')
+			OR shelter_dvsn_nm like CONCAT('%', #{keyword}, '%')
+			OR media_id like CONCAT('%', #{keyword}, '%')
+			OR sgg_nm like CONCAT('%', #{keyword}, '%')
+			OR emd_nm like CONCAT('%', #{keyword}, '%')
+			OR ad_type like CONCAT('%', #{keyword}, '%')
+			OR ad_rating like CONCAT('%', #{keyword}, '%')
+			OR sug_area like CONCAT('%', #{keyword}, '%')
+			OR lighting like CONCAT('%', #{keyword}, '%')
+			OR ad_price_month like CONCAT('%', #{keyword}, '%')
+			OR ad_make_price like CONCAT('%', #{keyword}, '%')
+			OR inner_size like CONCAT('%', #{keyword}, '%')
+			OR outer_size like CONCAT('%', #{keyword}, '%')	
+		</if>	
+		<![CDATA[
+    			order by gid desc ) A
+				where rnum between #{start} and #{end}
+		]]>
+	</select>
+	
+	<select id="selectCenterShelterList" resultType="EgovMap">
+		<![CDATA[
+			select 	rnum,
+					A.gid,
+					A.shelter_nm,
+					A.shelter_dvsn_nm,
+					A.media_id,
+					A.sgg_nm,
+					A.emd_nm,
+					A.ad_type,
+					A.ad_rating,
+					A.sug_area,
+					A.lighting,
+					A.ad_price_month,
+					A.ad_make_price,
+					A.inner_size,
+					A.outer_size
+			from (
+   				 select  ROW_NUMBER() OVER() as rnum,
+						 gid,
+						 shelter_nm,
+						 shelter_dvsn_nm,
+						 media_id,
+						 sgg_nm,
+						 emd_nm,
+						 ad_type,
+						 ad_rating,
+						 sug_area,
+						 lighting,
+						 ad_price_month,
+						 ad_make_price,
+						 inner_size,
+						 outer_size
+    			from shelter
+    			where shelter_dvsn_nm = '중앙차로'
+    			AND is_del = 'N'
+    	]]>
+		<if test="keyword != null and keyword != '' ">
+			AND shelter_nm like CONCAT('%', #{keyword}, '%')
+			OR shelter_dvsn_nm like CONCAT('%', #{keyword}, '%')
+			OR media_id like CONCAT('%', #{keyword}, '%')
+			OR sgg_nm like CONCAT('%', #{keyword}, '%')
+			OR emd_nm like CONCAT('%', #{keyword}, '%')
+			OR ad_type like CONCAT('%', #{keyword}, '%')
+			OR ad_rating like CONCAT('%', #{keyword}, '%')
+			OR sug_area like CONCAT('%', #{keyword}, '%')
+			OR lighting like CONCAT('%', #{keyword}, '%')
+			OR ad_price_month like CONCAT('%', #{keyword}, '%')
+			OR ad_make_price like CONCAT('%', #{keyword}, '%')
+			OR inner_size like CONCAT('%', #{keyword}, '%')
+			OR outer_size like CONCAT('%', #{keyword}, '%')	
+		</if>	
+		<![CDATA[
+    			order by gid desc ) A
+				where rnum between #{start} and #{end}
+		]]>
+	</select>
+	
+	<select id="selectTaxiShelterList" resultType="EgovMap">
+		<![CDATA[
+			select 	rnum,
+					A.gid,
+					A.shelter_nm,
+					A.shelter_dvsn_nm,
+					A.media_id,
+					A.sgg_nm,
+					A.emd_nm,
+					A.ad_type,
+					A.ad_rating,
+					A.sug_area,
+					A.lighting,
+					A.ad_price_month,
+					A.ad_make_price,
+					A.inner_size,
+					A.outer_size
+			from (
+   				 select  ROW_NUMBER() OVER() as rnum,
+						 gid,
+						 shelter_nm,
+						 shelter_dvsn_nm,
+						 media_id,
+						 sgg_nm,
+						 emd_nm,
+						 ad_type,
+						 ad_rating,
+						 sug_area,
+						 lighting,
+						 ad_price_month,
+						 ad_make_price,
+						 inner_size,
+						 outer_size
+    			from shelter
+    			where shelter_dvsn_nm = '택시쉘터'
+    			AND is_del = 'N'
+    	]]>
+		<if test="keyword != null and keyword != '' ">
+			AND shelter_nm like CONCAT('%', #{keyword}, '%')
+			OR shelter_dvsn_nm like CONCAT('%', #{keyword}, '%')
+			OR media_id like CONCAT('%', #{keyword}, '%')
+			OR sgg_nm like CONCAT('%', #{keyword}, '%')
+			OR emd_nm like CONCAT('%', #{keyword}, '%')
+			OR ad_type like CONCAT('%', #{keyword}, '%')
+			OR ad_rating like CONCAT('%', #{keyword}, '%')
+			OR sug_area like CONCAT('%', #{keyword}, '%')
+			OR lighting like CONCAT('%', #{keyword}, '%')
+			OR ad_price_month like CONCAT('%', #{keyword}, '%')
+			OR ad_make_price like CONCAT('%', #{keyword}, '%')
+			OR inner_size like CONCAT('%', #{keyword}, '%')
+			OR outer_size like CONCAT('%', #{keyword}, '%')	
+		</if>	
+		<![CDATA[
+    			order by gid desc ) A
+				where rnum between #{start} and #{end}
+		]]>
+	</select>
+	
+	<select id="selectCount" parameterType="EgovMap" resultType="int" >
+		<![CDATA[
+			select 
+				count(*) 
+			from shelter
+			where shelter_dvsn_nm = '가로변버스'
+			AND is_del = 'N'
+		]]>
+		<if test="keyword != null and keyword != '' ">
+     		AND shelter_nm like CONCAT('%', #{keyword}, '%')
+			OR shelter_dvsn_nm like CONCAT('%', #{keyword}, '%')
+			OR media_id like CONCAT('%', #{keyword}, '%')
+			OR sgg_nm like CONCAT('%', #{keyword}, '%')
+			OR emd_nm like CONCAT('%', #{keyword}, '%')
+			OR ad_type like CONCAT('%', #{keyword}, '%')
+			OR ad_rating like CONCAT('%', #{keyword}, '%')
+			OR sug_area like CONCAT('%', #{keyword}, '%')
+			OR lighting like CONCAT('%', #{keyword}, '%')
+			OR ad_price_month like CONCAT('%', #{keyword}, '%')
+			OR ad_make_price like CONCAT('%', #{keyword}, '%')
+			OR inner_size like CONCAT('%', #{keyword}, '%')
+			OR outer_size like CONCAT('%', #{keyword}, '%')	
+		</if>
+	</select>
+	
+	<select id="selectCenterShelterCount" parameterType="EgovMap" resultType="int" >
+		<![CDATA[
+			select 
+				count(*) 
+			from shelter
+			where shelter_dvsn_nm = '중앙차로'
+			AND is_del = 'N'
+		]]>
+	<if test="keyword != null and keyword != '' ">
+     		AND shelter_nm like CONCAT('%', #{keyword}, '%')
+			OR shelter_dvsn_nm like CONCAT('%', #{keyword}, '%')
+			OR media_id like CONCAT('%', #{keyword}, '%')
+			OR sgg_nm like CONCAT('%', #{keyword}, '%')
+			OR emd_nm like CONCAT('%', #{keyword}, '%')
+			OR ad_type like CONCAT('%', #{keyword}, '%')
+			OR ad_rating like CONCAT('%', #{keyword}, '%')
+			OR sug_area like CONCAT('%', #{keyword}, '%')
+			OR lighting like CONCAT('%', #{keyword}, '%')
+			OR ad_price_month like CONCAT('%', #{keyword}, '%')
+			OR ad_make_price like CONCAT('%', #{keyword}, '%')
+			OR inner_size like CONCAT('%', #{keyword}, '%')
+			OR outer_size like CONCAT('%', #{keyword}, '%')	
+			</if>
+	</select>
+	
+	<select id="selectTaxiShelterCount" parameterType="EgovMap" resultType="int" >
+		<![CDATA[
+			select 
+				count(*) 
+			from shelter
+			where shelter_dvsn_nm = '택시쉘터'
+			AND is_del = 'N'
+		]]>
+	<if test="keyword != null and keyword != '' ">
+     		AND shelter_nm like CONCAT('%', #{keyword}, '%')
+			OR shelter_dvsn_nm like CONCAT('%', #{keyword}, '%')
+			OR media_id like CONCAT('%', #{keyword}, '%')
+			OR sgg_nm like CONCAT('%', #{keyword}, '%')
+			OR emd_nm like CONCAT('%', #{keyword}, '%')
+			OR ad_type like CONCAT('%', #{keyword}, '%')
+			OR ad_rating like CONCAT('%', #{keyword}, '%')
+			OR sug_area like CONCAT('%', #{keyword}, '%')
+			OR lighting like CONCAT('%', #{keyword}, '%')
+			OR ad_price_month like CONCAT('%', #{keyword}, '%')
+			OR ad_make_price like CONCAT('%', #{keyword}, '%')
+			OR inner_size like CONCAT('%', #{keyword}, '%')
+			OR outer_size like CONCAT('%', #{keyword}, '%')	
+			</if>
+	</select>
+	
+	<select id="selectPsdList" resultType="EgovMap">
+		<![CDATA[
+			select 	rnum,
+					A.gid,
+					A.line,
+					A.metro_cd,
+					A.psd_metro,
+					A.psd_no,
+					A.psd_type,
+					A.ad_price_month,
+					A.ad_make_price,
+					A.ad_package,
+					A.operation_company
+			from (
+   				 select  ROW_NUMBER() OVER() as rnum,
+						 gid, 
+						 line,
+						 metro_cd, 
+						 psd_metro,
+						 psd_no, 
+						 psd_type, 
+						 ad_price_month, 
+						 ad_make_price, 
+						 ad_package,
+						 operation_company
+    			from psd
+    			where is_del = 'N'
+    	]]>
+				<if test="keyword != null and keyword != '' ">
+					AND line like CONCAT('%', #{keyword}, '%')
+					OR metro_cd like CONCAT('%', #{keyword}, '%')
+					OR psd_metro like CONCAT('%', #{keyword}, '%')
+					OR psd_no like CONCAT('%', #{keyword}, '%')
+					OR psd_type like CONCAT('%', #{keyword}, '%')
+					OR ad_price_month like CONCAT('%', #{keyword}, '%')
+					OR ad_make_price like CONCAT('%', #{keyword}, '%')
+					OR ad_package like CONCAT('%', #{keyword}, '%')
+					OR operation_company like (CONCAT('%', #{keyword}, '%'))
+				</if>
+		<![CDATA[
+    			order by gid desc ) A
+				where rnum between #{start} and #{end}
+		]]>
+	</select>
+	
+	<select id="selectPsdCount" parameterType="EgovMap" resultType="int" >
+		<![CDATA[
+			select 
+				count(*) 
+			from psd
+			where is_del = 'N'
+		]]>
+			<if test="keyword != null and keyword != '' ">
+	  			AND line like CONCAT('%', #{keyword}, '%')
+				OR metro_cd like CONCAT('%', #{keyword}, '%')
+				OR psd_metro like CONCAT('%', #{keyword}, '%')
+				OR psd_no like CONCAT('%', #{keyword}, '%')
+				OR psd_type like CONCAT('%', #{keyword}, '%')
+				OR ad_price_month like CONCAT('%', #{keyword}, '%')
+				OR ad_make_price like CONCAT('%', #{keyword}, '%')
+				OR ad_package like CONCAT('%', #{keyword}, '%')
+				OR operation_company like CONCAT('%', #{keyword}, '%')
+			</if>
+	</select>
+	
+	<select id="selectGdiaList" resultType="EgovMap">
+		<![CDATA[
+			select 	rnum,
+					A.gid,
+					A.line,
+					A.ad_rating,
+					A.station_nm,
+					A.media_type,
+					A.quantity,
+					A.unit_price,
+					A.ad_price_month
+			from (
+   				 select  ROW_NUMBER() OVER() as rnum,
+						 gid, 
+						line, 
+						ad_rating, 
+						station_nm, 
+						media_type, 
+						quantity, 
+						unit_price, 
+						ad_price_month 
+    			from gdia
+    			where is_del = 'N'
+    			]]>
+				<if test="keyword != null and keyword != '' ">
+					AND line like CONCAT('%', #{keyword}, '%')
+					OR ad_rating like CONCAT('%', #{keyword}, '%')
+					OR station_nm like CONCAT('%', #{keyword}, '%')
+					OR media_type like CONCAT('%', #{keyword}, '%')
+					OR unit_price like CONCAT('%', #{keyword}, '%')
+					OR ad_price_month like CONCAT('%', #{keyword}, '%')	
+				</if>		
+		<![CDATA[
+    			order by gid desc ) A
+				where rnum between #{start} and #{end}
+		]]>
+	</select>
+	
+	<select id="selectGdiaCount" parameterType="EgovMap" resultType="int" >
+		<![CDATA[
+			select 
+				count(*) 
+			from gdia
+			where is_del = 'N'
+			]]>
+			<if test="keyword != null and keyword != '' ">
+	  			AND line like CONCAT('%', #{keyword}, '%')
+				OR ad_rating like CONCAT('%', #{keyword}, '%')
+				OR station_nm like CONCAT('%', #{keyword}, '%')
+				OR media_type like CONCAT('%', #{keyword}, '%')
+				OR unit_price like CONCAT('%', #{keyword}, '%')
+				OR ad_price_month like CONCAT('%', #{keyword}, '%')	
+			</if>	
+	</select>
+	
+	<select id="selectBusList" resultType="EgovMap">
+		<![CDATA[
+			select 	rnum,
+					A.gid,
+					A.route_no,
+					A.ad_rating,
+					A.bus_dvsn_nm,
+					A.start_point,
+					A.end_point,
+					A.ad_price_month,
+					A.ad_make_price,
+					A.operation_company,
+					A.start_time,
+					A.end_time,
+					A.alloc_interval,
+					A.operation_bus,
+					A.media_company
+			from (
+   				 select  ROW_NUMBER() OVER() as rnum,
+						 gid, 
+						route_no, 
+						ad_rating, 
+						bus_dvsn_nm, 
+						start_point, 
+						end_point, 
+						ad_price_month, 
+						ad_make_price, 
+						operation_company, 
+						start_time, 
+						end_time, 
+						alloc_interval, 
+						operation_bus, 
+						media_company 
+    			from bus
+    			where dvsn_2_no = 1
+    			AND is_del = 'N'
+    			]]>
+				<if test="keyword != null and keyword != '' ">
+					AND route_no like CONCAT('%', #{keyword}, '%')
+					OR ad_rating like CONCAT('%', #{keyword}, '%')	
+					OR bus_dvsn_nm like CONCAT('%', #{keyword}, '%')	
+					OR start_point like CONCAT('%', #{keyword}, '%')	
+					OR end_point like CONCAT('%', #{keyword}, '%')	
+					OR ad_price_month like CONCAT('%', #{keyword}, '%')	
+					OR ad_make_price like CONCAT('%', #{keyword}, '%')	
+					OR operation_company like CONCAT('%', #{keyword}, '%')	
+					OR start_time like CONCAT('%', #{keyword}, '%')	
+					OR end_time like CONCAT('%', #{keyword}, '%')	
+					OR alloc_interval like CONCAT('%', #{keyword}, '%')	
+					OR media_company like CONCAT('%', #{keyword}, '%')	
+				</if>
+		<![CDATA[
+    			order by gid desc ) A
+				where rnum between #{start} and #{end}
+		]]>
+	</select>
+	
+	<select id="selectSeoulBusList" resultType="EgovMap">
+		<![CDATA[
+			select 	rnum,
+					A.gid,
+					A.route_no,
+					A.ad_rating,
+					A.bus_dvsn_nm,
+					A.start_point,
+					A.end_point,
+					A.ad_price_month,
+					A.ad_make_price,
+					A.operation_company,
+					A.start_time,
+					A.end_time,
+					A.alloc_interval,
+					A.operation_bus,
+					A.media_company
+			from (
+   				 select  ROW_NUMBER() OVER() as rnum,
+						 gid, 
+						route_no, 
+						ad_rating, 
+						bus_dvsn_nm, 
+						start_point, 
+						end_point, 
+						ad_price_month, 
+						ad_make_price, 
+						operation_company, 
+						start_time, 
+						end_time, 
+						alloc_interval, 
+						operation_bus, 
+						media_company 
+    			from bus
+    			where dvsn_2_no = 2
+    			AND is_del = 'N'
+    			]]>
+				<if test="keyword != null and keyword != '' ">
+					AND route_no like CONCAT('%', #{keyword}, '%')
+					OR ad_rating like CONCAT('%', #{keyword}, '%')	
+					OR bus_dvsn_nm like CONCAT('%', #{keyword}, '%')	
+					OR start_point like CONCAT('%', #{keyword}, '%')	
+					OR end_point like CONCAT('%', #{keyword}, '%')	
+					OR ad_price_month like CONCAT('%', #{keyword}, '%')	
+					OR ad_make_price like CONCAT('%', #{keyword}, '%')	
+					OR operation_company like CONCAT('%', #{keyword}, '%')	
+					OR start_time like CONCAT('%', #{keyword}, '%')	
+					OR end_time like CONCAT('%', #{keyword}, '%')	
+					OR alloc_interval like CONCAT('%', #{keyword}, '%')	
+					OR media_company like CONCAT('%', #{keyword}, '%')	
+				</if>
+		<![CDATA[
+    			order by gid desc ) A
+				where rnum between #{start} and #{end}
+		]]>
+	</select>
+	
+	<select id="selectBusCount" parameterType="EgovMap" resultType="int" >
+		<![CDATA[
+			select 
+				count(*) 
+			from bus
+			where is_del = 'N'
+		]]>
+			<if test="keyword != null and keyword != '' ">
+		  		AND route_no like CONCAT('%', #{keyword}, '%')
+				OR ad_rating like CONCAT('%', #{keyword}, '%')	
+				OR bus_dvsn_nm like CONCAT('%', #{keyword}, '%')	
+				OR start_point like CONCAT('%', #{keyword}, '%')	
+				OR end_point like CONCAT('%', #{keyword}, '%')	
+				OR ad_price_month like CONCAT('%', #{keyword}, '%')	
+				OR ad_make_price like CONCAT('%', #{keyword}, '%')	
+				OR operation_company like CONCAT('%', #{keyword}, '%')	
+				OR start_time like CONCAT('%', #{keyword}, '%')	
+				OR end_time like CONCAT('%', #{keyword}, '%')	
+				OR alloc_interval like CONCAT('%', #{keyword}, '%')	
+				OR media_company like CONCAT('%', #{keyword}, '%')
+			</if>	
+	</select>
+	
+	<select id="selectSeoulBusCount" parameterType="EgovMap" resultType="int" >
+		<![CDATA[
+			select 
+				count(*) 
+			from bus
+			where is_del = 'N'
+		]]>
+			<if test="keyword != null and keyword != '' ">
+		  		AND route_no like CONCAT('%', #{keyword}, '%')
+				OR ad_rating like CONCAT('%', #{keyword}, '%')	
+				OR bus_dvsn_nm like CONCAT('%', #{keyword}, '%')	
+				OR start_point like CONCAT('%', #{keyword}, '%')	
+				OR end_point like CONCAT('%', #{keyword}, '%')	
+				OR ad_price_month like CONCAT('%', #{keyword}, '%')	
+				OR ad_make_price like CONCAT('%', #{keyword}, '%')	
+				OR operation_company like CONCAT('%', #{keyword}, '%')	
+				OR start_time like CONCAT('%', #{keyword}, '%')	
+				OR end_time like CONCAT('%', #{keyword}, '%')	
+				OR alloc_interval like CONCAT('%', #{keyword}, '%')	
+				OR media_company like CONCAT('%', #{keyword}, '%')
+			</if>	
+	</select>
+	
+	<select id="selectMediaBoardList" resultType="EgovMap">
+		<![CDATA[
+			select 	rnum,
+					A.gid,
+					A.bd_type,
+					A.cplx_nm,
+					A.address,
+					A.ad_rating,
+					A.households_cnt,
+					A.panel_cnt
+			from (
+   				 select  ROW_NUMBER() OVER() as rnum,
+						 gid,
+						bd_type, 
+						cplx_nm, 
+						address, 
+						ad_rating, 
+						households_cnt, 
+						panel_cnt
+    			from mediaboard
+    			where is_del = 'N'
+    			]]>
+				<if test="keyword != null and keyword != '' ">
+					AND bd_type like CONCAT('%', #{keyword}, '%')
+					OR cplx_nm like CONCAT('%', #{keyword}, '%')
+					OR address like CONCAT('%', #{keyword}, '%')
+					OR ad_rating like CONCAT('%', #{keyword}, '%')
+				</if>
+		<![CDATA[
+    			order by gid desc ) A
+				where rnum between #{start} and #{end}
+		]]>
+	</select>
+	
+	<select id="selectMediaboardCount" parameterType="EgovMap" resultType="int" >
+		<![CDATA[
+			select 
+				count(*) 
+			from mediaboard
+			where is_del = 'N'
+		]]>
+			<if test="keyword != null and keyword != '' ">
+	 	 		AND bd_type like CONCAT('%', #{keyword}, '%')
+				OR cplx_nm like CONCAT('%', #{keyword}, '%')
+				OR address like CONCAT('%', #{keyword}, '%')
+				OR ad_rating like CONCAT('%', #{keyword}, '%')
+			</if>
+	</select>
+	
+	<select id="selectTownBoardList" resultType="EgovMap">
+		<![CDATA[
+			select 	rnum,
+					A.gid,
+					A.bd_type,
+					A.apt_nm,
+					A.address,
+					A.panel_cnt,
+					A.households_cnt,
+					A.ad_sound,
+					A.split_screen,
+					A.min_impressions,
+					A.per_month_1,
+					A.ad_price_month_1,
+					A.per_month_2,
+					A.ad_price_month_2
+			from (
+   				 select  ROW_NUMBER() OVER() as rnum,
+						 gid,
+						bd_type, 
+						apt_nm, 
+						address, 
+						panel_cnt, 
+						households_cnt, 
+						ad_sound, 
+						split_screen, 
+						min_impressions, 
+						per_month_1, 
+						ad_price_month_1,
+						per_month_2, 
+						ad_price_month_2 
+    			from townboard
+    			where is_del = 'N'
+    			]]>
+				<if test="keyword != null and keyword != '' ">
+					AND bd_type like CONCAT('%', #{keyword}, '%')
+					OR apt_nm like CONCAT('%', #{keyword}, '%')
+					OR address like CONCAT('%', #{keyword}, '%')
+					OR ad_sound like CONCAT('%', #{keyword}, '%')
+					OR split_screen like CONCAT('%', #{keyword}, '%')
+					OR min_impressions like CONCAT('%', #{keyword}, '%')
+					OR per_month_1 like CONCAT('%', #{keyword}, '%')
+					OR ad_price_month_1 like CONCAT('%', #{keyword}, '%')
+					OR per_month_2 like CONCAT('%', #{keyword}, '%')
+					OR ad_price_month_2 like CONCAT('%', #{keyword}, '%')
+				</if>
+		<![CDATA[
+    			order by gid desc ) A
+				where rnum between #{start} and #{end}
+		]]>
+	</select>
+	
+	<select id="selectTownboardCount" parameterType="EgovMap" resultType="int" >
+		<![CDATA[
+			select 
+				count(*) 
+			from townboard
+			where is_del = 'N'
+		]]>
+			<if test="keyword != null and keyword != '' ">
+		 		AND bd_type like CONCAT('%', #{keyword}, '%')
+				OR apt_nm like CONCAT('%', #{keyword}, '%')
+				OR address like CONCAT('%', #{keyword}, '%')
+				OR ad_sound like CONCAT('%', #{keyword}, '%')
+				OR split_screen like CONCAT('%', #{keyword}, '%')
+				OR min_impressions like CONCAT('%', #{keyword}, '%')
+				OR per_month_1 like CONCAT('%', #{keyword}, '%')
+				OR ad_price_month_1 like CONCAT('%', #{keyword}, '%')
+				OR per_month_2 like CONCAT('%', #{keyword}, '%')
+				OR ad_price_month_2 like CONCAT('%', #{keyword}, '%')
+			</if>
+	</select>
+	
+	<select id="selectEdisplayList" resultType="EgovMap">
+		<![CDATA[
+			select 	rnum,
+					A.gid,
+					A.name,
+					A.address,
+					A.size,
+					A.spec,
+					A.ad_price_month,
+					A.operation_time,
+					A.media_company
+			from (
+   				 select  ROW_NUMBER() OVER() as rnum,
+						 gid, 
+						name, 
+						address, 
+						size, 
+						spec, 
+						ad_price_month, 
+						operation_time, 
+						media_company 	
+    			from e_display
+    			where is_del = 'N'
+    			]]>
+				<if test="keyword != null and keyword != '' ">
+					AND name like CONCAT('%', #{keyword}, '%')
+					OR address like CONCAT('%', #{keyword}, '%')
+					OR size like CONCAT('%', #{keyword}, '%')
+					OR spec like CONCAT('%', #{keyword}, '%')
+					OR ad_price_month like CONCAT('%', #{keyword}, '%')
+					OR operation_time like CONCAT('%', #{keyword}, '%')
+					OR media_company like CONCAT('%', #{keyword}, '%')
+				</if>
+		<![CDATA[
+    			order by gid desc ) A
+				where rnum between #{start} and #{end}
+		]]>
+	</select>
+	
+	<select id="selectEdisplayCount" parameterType="EgovMap" resultType="int" >
+		<![CDATA[
+			select 
+				count(*) 
+			from e_display
+			where is_del = 'N'
+		]]>
+			<if test="keyword != null and keyword != '' ">
+		 	 	AND name like CONCAT('%', #{keyword}, '%')
+				OR address like CONCAT('%', #{keyword}, '%')
+				OR size like CONCAT('%', #{keyword}, '%')
+				OR spec like CONCAT('%', #{keyword}, '%')
+				OR ad_price_month like CONCAT('%', #{keyword}, '%')
+				OR operation_time like CONCAT('%', #{keyword}, '%')
+				OR media_company like CONCAT('%', #{keyword}, '%')
+			</if>
+	</select>
+	
+	<select id="selectBillBoardList" resultType="EgovMap">
+		<![CDATA[
+			select 	rnum,
+					A.gid,
+					A.name,
+					A.road_address,
+					A.ad_area_cnt,
+					A.front_size,
+					A.leftside_size,
+					A.rightside_size,
+					A.back_size,
+					A.ad_price_month,
+					A.ad_make_price,
+					A.min_condition,
+					A.media_company
+			from (
+   				 select  ROW_NUMBER() OVER() as rnum,
+						 gid, 
+						name,
+						road_address, 
+						ad_area_cnt, 
+						front_size, 
+						leftside_size, 
+						rightside_size, 
+						back_size, 
+						ad_price_month, 
+						ad_make_price, 
+						min_condition, 
+						media_company
+    			from billboard
+    			where is_del = 'N'
+    			]]>
+				<if test="keyword != null and keyword != '' ">
+					AND name like CONCAT('%', #{keyword}, '%')
+					OR road_address like CONCAT('%', #{keyword}, '%')
+					OR front_size like CONCAT('%', #{keyword}, '%')
+					OR leftside_size like CONCAT('%', #{keyword}, '%')
+					OR rightside_size like CONCAT('%', #{keyword}, '%')
+					OR back_size like CONCAT('%', #{keyword}, '%')
+					OR ad_price_month like CONCAT('%', #{keyword}, '%')
+					OR ad_make_price like CONCAT('%', #{keyword}, '%')
+					OR min_condition like CONCAT('%', #{keyword}, '%')
+					OR media_company like CONCAT('%', #{keyword}, '%')
+				</if>
+		<![CDATA[
+    			order by gid desc ) A
+				where rnum between #{start} and #{end}
+		]]>
+	</select>
+	
+	<select id="selectBilboardCount" parameterType="EgovMap" resultType="int" >
+		<![CDATA[
+			select 
+				count(*) 
+			from billboard
+			where is_del = 'N'
+		]]>
+			<if test="keyword != null and keyword != '' ">
+		 	 	AND name like CONCAT('%', #{keyword}, '%')
+				OR road_address like CONCAT('%', #{keyword}, '%')
+				OR front_size like CONCAT('%', #{keyword}, '%')
+				OR leftside_size like CONCAT('%', #{keyword}, '%')
+				OR rightside_size like CONCAT('%', #{keyword}, '%')
+				OR back_size like CONCAT('%', #{keyword}, '%')
+				OR ad_price_month like CONCAT('%', #{keyword}, '%')
+				OR ad_make_price like CONCAT('%', #{keyword}, '%')
+				OR min_condition like CONCAT('%', #{keyword}, '%')
+				OR media_company like CONCAT('%', #{keyword}, '%')
+			</if>
+	</select>
+	
+	<select id="selectOuterWallList" resultType="EgovMap">
+		<![CDATA[
+			select 	rnum,
+					A.gid,
+					A.bd_nm,
+					A.acpt_law_dvsn_nm,
+					A.road_address,
+					A.ad_type,
+					A.material,
+					A.lighting,
+					A.install_qt,
+					A.term,
+					A.ad_price,
+					A.ad_make_price,
+					A.size,
+					A.media_company
+			from (
+   				 select  ROW_NUMBER() OVER() as rnum,
+						gid, 
+						bd_nm, 
+						acpt_law_dvsn_nm, 
+						road_address, 
+						ad_type, 
+						material, 
+						lighting, 
+						install_qt, 
+						term, 
+						ad_price, 
+						ad_make_price, 
+						size, 
+						media_company 
+    			from outerwall
+    			where is_del = 'N'
+    			]]>
+			<if test="keyword != null and keyword != '' ">
+				AND bd_nm like CONCAT('%', #{keyword}, '%')
+				OR acpt_law_dvsn_nm like CONCAT('%', #{keyword}, '%')
+				OR road_address like CONCAT('%', #{keyword}, '%')
+				OR ad_type like CONCAT('%', #{keyword}, '%')
+				OR material like CONCAT('%', #{keyword}, '%')
+				OR lighting like CONCAT('%', #{keyword}, '%')
+				OR install_qt like CONCAT('%', #{keyword}, '%')
+				OR term like CONCAT('%', #{keyword}, '%')
+				OR ad_price like CONCAT('%', #{keyword}, '%')
+				OR ad_make_price like CONCAT('%', #{keyword}, '%')
+				OR size like CONCAT('%', #{keyword}, '%')
+				OR media_company like CONCAT('%', #{keyword}, '%')
+			</if>	
+		<![CDATA[
+    			order by gid desc ) A
+				where rnum between #{start} and #{end}
+		]]>
+	</select>
+	
+	<select id="selectOuterwallCount" parameterType="EgovMap" resultType="int" >
+		<![CDATA[
+			select 
+				count(*) 
+			from outerwall		
+			where is_del = 'N'	
+		]]>
+			<if test="keyword != null and keyword != '' ">
+		  		AND bd_nm like CONCAT('%', #{keyword}, '%')
+				OR acpt_law_dvsn_nm like CONCAT('%', #{keyword}, '%')
+				OR road_address like CONCAT('%', #{keyword}, '%')
+				OR ad_type like CONCAT('%', #{keyword}, '%')
+				OR material like CONCAT('%', #{keyword}, '%')
+				OR lighting like CONCAT('%', #{keyword}, '%')
+				OR install_qt like CONCAT('%', #{keyword}, '%')
+				OR term like CONCAT('%', #{keyword}, '%')
+				OR ad_price like CONCAT('%', #{keyword}, '%')
+				OR ad_make_price like CONCAT('%', #{keyword}, '%')
+				OR size like CONCAT('%', #{keyword}, '%')
+				OR media_company like CONCAT('%', #{keyword}, '%')	
+			</if>
+	</select>
+
+	<update id="updateShelterData" parameterType="EgovMap">
+		<![CDATA[
+			UPDATE shelter 
+				SET shelter_nm = #{shelterNm},
+					shelter_dvsn_nm = #{shelterDvsnNm},
+					media_id = #{mediaId},
+					sgg_nm = #{sggNm},
+					emd_nm = #{emdNm},
+					ad_type = #{adType},
+					ad_rating = #{adRating},
+					sug_area = #{sugArea},
+					lighting = #{lighting},
+					ad_price_month = #{adPriceMonth},
+					ad_make_price = #{adMakePrice},		
+					inner_size = #{innerSize},
+					outer_size = #{outerSize}			 
+				WHERE gid = #{gid}::integer 
+		 ]]>
+	</update>
+	
+	<update id="updatePsdData" parameterType="EgovMap">
+		<![CDATA[
+			UPDATE psd 
+				SET line = #{line},
+					metro_cd = #{metroCd},
+					psd_metro = #{psdMetro},
+					psd_no = #{psdNo},
+					psd_type = #{psdType},
+					ad_price_month = #{adPriceMonth},
+					ad_make_price = #{adMakePrice},
+					avg_inout_month = #{avgInoutMonth},
+					ad_package = #{adPackage},
+					operation_company = #{operationCompany}		 
+				WHERE gid = #{gid}::integer 
+		 ]]>
+	</update>
+	
+	<update id="updateGdiaData" parameterType="EgovMap">
+		<![CDATA[
+			UPDATE gdia 
+				SET line = #{line},
+					ad_rating = #{adRating},
+					station_nm = #{stationNm},
+					media_type = #{mediaType},
+					quantity = #{quantity}::integer ,
+					unit_price = #{unitPrice},
+					ad_price_month = #{adPriceMonth}	 
+				WHERE gid = #{gid}::integer 
+		 ]]>
+	</update>
+	
+	<update id="updateBusData" parameterType="EgovMap">
+		<![CDATA[
+			UPDATE bus 
+				SET route_no = #{routeNo},
+					ad_rating = #{adRating},
+					bus_dvsn_nm = #{busDvsnNm},
+					start_point = #{startPoint},
+					end_point = #{endPoint},
+					ad_price_month = #{adPriceMonth},
+					ad_make_price = #{adMakePrice},
+					operation_company = #{operationCompany},
+					start_time = #{startTime},
+					end_time = #{endTime},
+					alloc_interval = #{allocInterval},
+					operation_bus = #{operationBus}::integer,
+					media_company = #{mediaCompany}
+				WHERE gid = #{gid}::integer 
+		 ]]>
+	</update>
+	
+	<update id="updateMediaboardData" parameterType="EgovMap">
+		<![CDATA[
+			UPDATE mediaboard 
+				SET bd_type = #{bdType},
+					cplx_nm = #{cplxNm},
+					address = #{address},
+					ad_rating = #{adRating},
+					households_cnt = #{householdsCnt}::integer,
+					half_1_panel_cnt = #{half1PanelCnt}::integer,
+					half_2_panel_cnt = #{half2PanelCnt}	::integer 
+				WHERE gid = #{gid}::integer 
+		 ]]>
+	</update>
+	
+	<update id="updateTownboardData" parameterType="EgovMap">
+		<![CDATA[
+			UPDATE townboard 
+				SET bd_type = #{bdType},
+					apt_nm = #{aptNm},
+					address = #{address},
+					panel_cnt = #{panelCnt}::integer,
+					households_cnt = #{householdsCnt}::integer,
+					ad_sound = #{adSound},
+					split_screen = #{splitScreen},
+					min_impressions = #{minImpressions},
+					per_month_1 = #{perMonth1},
+					ad_price_month_1 = #{adPriceMonth1},
+					per_month_2 = #{perMonth2},
+					ad_price_month_2 = #{adPriceMonth2} 
+				WHERE gid = #{gid}::integer 
+		 ]]>
+	</update>
+	
+	<update id="updateEdisplayData" parameterType="EgovMap">
+		<![CDATA[
+			UPDATE e_display 
+				SET name = #{name},
+					address = #{address},
+					size = #{size},
+					spec = #{spec},
+					ad_price_month = #{adPriceMonth},
+					operation_time = #{operationTime},
+					media_company = #{mediaCompany}
+				WHERE gid = #{gid}::integer 
+		 ]]>
+	</update>
+	
+	<update id="updateBillboardData" parameterType="EgovMap">
+		<![CDATA[
+			UPDATE billboard 
+				SET name = #{name},
+					road_address = #{roadAddress},
+					ad_area_cnt = #{adAreaCnt}::integer,
+					front_size = #{frontSize},
+					leftside_size = #{leftsideSize},
+					rightside_size = #{rightsideSize},
+					back_size = #{backSize},
+					ad_price_month = #{adPriceMonth},
+					ad_make_price = #{adMakePrice},
+					min_condition = #{minCondition},
+					media_company = #{mediaCompany}
+				WHERE gid = #{gid}::integer 
+		 ]]>
+	</update>
+	
+	<update id="updateOuterwallData" parameterType="EgovMap">
+		<![CDATA[
+			UPDATE outerwall 
+				SET bd_nm = #{bdNm},
+					acpt_law_dvsn_nm = #{acptLawDvsnNm},
+					road_address = #{roadAddress},
+					ad_type = #{adType},
+					material = #{material},
+					lighting = #{lighting},
+					install_qt = #{installQt},
+					term = #{term},
+					ad_price = #{adPrice},
+					ad_make_price = #{adMakePrice},
+					size = #{size},
+					media_company = #{mediaCompany}
+				WHERE gid = #{gid}::integer 
+		 ]]>
+	</update>
+	
+	<delete id="deleteShelterData" parameterType="EgovMap">
+		UPDATE SHELTER SET IS_DEL = 'Y' WHERE gid = #{gid}::integer 
+	</delete>
+	
+	<delete id="deletePsdData" parameterType="EgovMap">
+		UPDATE PSD SET IS_DEL = 'Y' WHERE gid = #{gid}::integer 
+	</delete>
+	
+	<delete id="deleteGdiaData" parameterType="EgovMap">
+		UPDATE GDIA SET IS_DEL = 'Y' WHERE gid = #{gid}::integer 
+	</delete>
+	
+	<delete id="deleteBusData" parameterType="EgovMap">
+		UPDATE BUS SET IS_DEL = 'Y' WHERE gid = #{gid}::integer 
+	</delete>
+	
+	<delete id="deleteMediaboardData" parameterType="EgovMap">
+		UPDATE MEDIABOARD SET IS_DEL = 'Y' WHERE gid = #{gid}::integer 
+	</delete>
+	
+	<delete id="deleteTownboardData" parameterType="EgovMap">
+		UPDATE TOWNBOARD SET IS_DEL = 'Y' WHERE gid = #{gid}::integer 
+	</delete>
+	
+	<delete id="deleteEdisplayData" parameterType="EgovMap">
+		UPDATE E_DISPLAY SET IS_DEL = 'Y' WHERE gid = #{gid}::integer 
+	</delete>
+	
+	<delete id="deleteBillboardData" parameterType="EgovMap">
+		UPDATE BILLBOARD SET IS_DEL = 'Y' WHERE gid = #{gid}::integer 
+	</delete>
+	
+	<delete id="deleteOuterwallData" parameterType="EgovMap">
+		UPDATE OUTERWALL SET IS_DEL = 'Y' WHERE gid = #{gid}::integer 
+	</delete>
+    
+    <insert id="ShelterExcelupload" parameterType="EgovMap">
+        INSERT INTO shelter (
+                  gid
+                , geom
+				, shelter_id
+				, shelter_nm
+				, shelter_dvsn_nm
+				, media_id
+				, sgg_nm
+				, emd_nm
+				, address
+				, ad_type
+				, ad_rating
+				, sug_area
+				, lighting
+				, ad_price_month
+				, ad_make_price
+				, inner_size
+				, outer_size
+				, latitude
+				, longitude
+				, type
+	 			, ad_rating_no
+	 			, is_media
+	 			, dvsn_1_no
+				, dvsn_2_no
+				, order_no
+				, is_del
+                ) 
+                VALUES
+            <foreach collection="excelContent" item="item" separator=",">   
+                (
+                nextval('shelter_seq'),
+                ST_SetSRID(ST_MakePoint(#{item.Q}::DOUBLE PRECISION, #{item.P}::DOUBLE PRECISION),4326), 
+                #{item.A},
+                #{item.B},
+                #{item.C},
+                #{item.D},
+                #{item.E},
+                #{item.F},
+                #{item.G},
+                #{item.H},
+                #{item.I},
+                #{item.J},
+                #{item.K},
+                #{item.L},
+                #{item.M},
+                #{item.N},
+                #{item.O},
+                #{item.P}::DOUBLE PRECISION,
+                #{item.Q}::DOUBLE PRECISION,
+                'shelter',
+                <choose>
+					<when test='item.I == "-"'>
+					99,
+					</when>
+					<when test='item.I == "A+"'>
+					4,
+					</when>
+					<when test='item.I == "SA+"'>
+					1,
+					</when>
+					<when test='item.I == "SA-V"'>
+					2,
+					</when>
+					<when test='item.I == "A"'>
+					5,
+					</when>
+					<when test='item.I == "SA"'>
+					3,
+					</when>
+					<when test='item.I == "L"'>
+					6,
+					</when>
+				</choose>      
+                'media',
+                1,
+                <choose>
+					<when test='item.C == "가로변버스" or item.C == "가로변 버스"'>
+					1,
+					</when>
+					<when test='item.C == "중앙차로" or item.C == "중앙 차로"'>
+					2,
+					</when>
+					<when test='item.C == "택시쉘터" or item.C == "택시 쉘터"'>
+					3,
+					</when>
+				</choose> 
+                order_no(#{item.D}, 3),
+                'N'
+                ) 
+            </foreach>
+    </insert>
+    
+    <select id="selectShelterBufferData" parameterType="EgovMap" resultType="EgovMap">
+    	SELECT GID, GEOM, TYPE, DVSN_1_NO, DVSN_2_NO FROM SHELTER WHERE MEDIA_ID IN
+    	<foreach collection="excelContent" item="item" open="(" close=")" separator=",">#{item.D}</foreach>
+    </select>
+    
+    <insert id="insertShelterBuffer" parameterType="EgovMap">
+        INSERT INTO shelter_buffer (
+        	gid,
+            buffer_geom
+        ) 
+        VALUES
+       	<foreach collection="list" item="item" separator=",">   
+        (
+        	#{item.gid},
+        	ST_BUFFER('${item.geom}', 0.0006, 'quad_segs=8')
+        ) 
+        </foreach>
+    </insert>
+    
+    <select id="selectContainsList" parameterType="EgovMap" resultType="EgovMap">
+    	select #{type} as type, a.gid, b.id as hp_id, ${dvsn1No} as dvsn_1_no, ${dvsn2No} as dvsn_2_no from ${type}_buffer a
+		join base_heatpoint b on st_contains(st_buffer('${geom}', 0.0006, 'quad_segs=8'), b.geom) = 'true'
+		where a.gid = ${gid} 
+    </select>
+    
+    <insert id="insertMediaContains" parameterType="EgovMap">
+        INSERT INTO media_contains (
+        	type,
+            gid,
+            hp_id,
+            dvsn_1_no,
+            dvsn_2_no
+        ) 
+        VALUES
+       	<foreach collection="list" item="item" separator=",">   
+        (
+        	#{item.type},
+        	${item.gid},
+        	${item.hpId},
+        	${item.dvsn1No},
+        	${item.dvsn2No}
+        ) 
+        </foreach>
+    </insert>
+	
+	<insert id="PsdExcelupload" parameterType="EgovMap">
+        INSERT INTO psd (
+                gid,
+				geom,
+				psd_id,
+				area,
+				line,
+				metro_cd,
+				psd_metro,
+				psd_no,
+				psd_type,
+				ad_price_month,
+				ad_make_price,
+				ad_package,
+				operation_company,
+				latitude,
+				longitude,
+				type,
+				is_media,
+				dvsn_1_no,
+				dvsn_2_no,
+				order_no,
+				is_del
+		) 
+        VALUES
+        <foreach collection="excelContent" item="item" separator=",">   
+                (
+                nextval('psd_id_seq'), 
+                ST_SetSRID(ST_MakePoint(#{item.M}::DOUBLE PRECISION, #{item.L}::DOUBLE PRECISION),4326),
+                #{item.A},
+                #{item.B},
+                #{item.C},
+                #{item.D},
+                #{item.E},
+                #{item.F},
+                #{item.G},
+                replace(#{item.H}, '.0', ''),
+                replace(#{item.I}, '.0', ''),
+                #{item.J},
+                #{item.K},
+                #{item.L}::DOUBLE PRECISION,
+                #{item.M}::DOUBLE PRECISION,
+                'psd',
+                'media',
+                2,
+                1,
+                #{item.D}||'-'||order_no(#{item.F}, 5),
+                'N'
+                )
+                
+    	</foreach>
+    </insert>
+	
+	<insert id="GdiaExcelupload" parameterType="EgovMap">
+        INSERT INTO gdia (
+            gid,
+			geom,
+			line,
+			ad_rating,
+			station_nm,
+			media_type,
+			quantity,
+			unit_price,
+			ad_price_month,
+			longitude,
+			latitude,
+			type,
+			is_media,
+			dvsn_1_no,
+			dvsn_2_no,
+			metro_cd,
+			media_type_cd,
+			order_no,
+			is_del
+		) 
+        VALUES
+        <foreach collection="excelContent" item="item" separator=",">   
+        	(
+            nextval('gdia_id_seq'), 
+            ST_SetSRID(ST_MakePoint(#{item.I}::DOUBLE PRECISION, #{item.H}::DOUBLE PRECISION),4326),
+            #{item.A},
+            #{item.B},
+            #{item.C},
+            #{item.D},
+            replace(#{item.E}, '.0', '')::integer,
+            replace(#{item.F}, '.0', ''),
+            replace(#{item.G}, '.0', ''),
+            #{item.H}::DOUBLE PRECISION,
+            #{item.I}::DOUBLE PRECISION,
+            'gdia',
+            'media',
+            2,
+            2,
+            (SELECT METRO_CD FROM METRO_INFO WHERE LINE_NUM = #{item.A} AND SUB_STA_NM = #{item.C}),
+            <choose>
+            	<when test='item.D == "배너"'>
+            	'T01',
+            	</when>
+            	<when test='item.D == "빅스크린" or item.D == "빅 스크린"'>
+            	'T02',
+            	</when>
+            	<when test='item.D == "포스터 - 49" or item.D == "포스터-49"'>
+            	'T03',
+            	</when>
+            	<when test='item.D == "포스터 - 65" or item.D == "포스터-65"'>
+            	'T04',
+            	</when>
+            </choose>
+            <choose>
+            	<when test='item.D == "배너"'>
+            	(SELECT METRO_CD FROM METRO_INFO WHERE LINE_NUM = #{item.A} AND SUB_STA_NM = #{item.C})||'-'||'T01',
+            	</when>
+            	<when test='item.D == "빅스크린" or item.D == "빅 스크린"'>
+            	(SELECT METRO_CD FROM METRO_INFO WHERE LINE_NUM = #{item.A} AND SUB_STA_NM = #{item.C})||'-'||'T02',
+            	</when>
+            	<when test='item.D == "포스터 - 49" or item.D == "포스터-49"'>
+            	(SELECT METRO_CD FROM METRO_INFO WHERE LINE_NUM = #{item.A} AND SUB_STA_NM = #{item.C})||'-'||'T03',
+            	</when>
+            	<when test='item.D == "포스터 - 65" or item.D == "포스터-65"'>
+            	(SELECT METRO_CD FROM METRO_INFO WHERE LINE_NUM = #{item.A} AND SUB_STA_NM = #{item.C})||'-'||'T04',
+            	</when>
+            </choose>
+            'N'
+            )              
+    	</foreach>
+    </insert>
+	
+	<insert id="BusExcelupload" parameterType="EgovMap">
+        INSERT INTO bus (
+                  geom
+                , id
+                , route_no
+                , ad_rating
+                , area
+                , bus_dvsn_nm
+                , primary_route
+                , start_point
+                , end_point
+                , ad_price_month
+				, ad_make_price
+				, operation_company
+				, start_time
+				, end_time
+		 		, alloc_interval
+		 		, operation_bus
+		 		, media_company
+		 		, type
+		 		, is_media
+		 		, dvsn_1_no
+		 		, dvsn_2_no
+		 		, weight
+                ) 
+                VALUES
+            <foreach collection="excelContent" item="item" separator=",">   
+                (
+                #{item.A} ::geometry(MultiLineString),  
+                #{item.B},
+                #{item.C},
+                #{item.D},
+                #{item.E},
+                #{item.F},
+                #{item.G},
+                #{item.H},
+                #{item.I},
+                #{item.J},
+                #{item.K},
+                #{item.L},
+                #{item.M},
+                #{item.N},
+                #{item.O},
+				#{item.P} ::DOUBLE PRECISION,
+                #{item.Q},
+                #{item.R},
+                #{item.S},
+				#{item.T} ::DOUBLE PRECISION,
+				#{item.U} ::DOUBLE PRECISION,
+				#{item.V} ::DOUBLE PRECISION
+                )
+            </foreach>
+    </insert>
+    
+    <insert id="MediaboardExcelupload" parameterType="EgovMap">
+        INSERT INTO mediaboard (
+                gid,
+				geom,
+				bd_type,
+				cplx_nm,
+				city_nm,
+				ward_nm,
+				address,
+				ad_rating,
+				households_cnt,
+				longitude,
+				latitude,
+				type,
+				is_media,
+				dvsn_1_no,
+				dvsn_2_no,
+				panel_type_cd,
+				panel_type,
+				panel_cnt,
+				avg_households,
+				weight,
+				order_no,
+				ad_price_month,
+				is_del
+                ) 
+                VALUES
+            <foreach collection="excelContent" item="item" separator=",">   
+                (
+                nextval('mediaboard_id_seq'),,
+                ST_SetSRID(ST_MakePoint(#{item.I}::DOUBLE PRECISION, #{item.H}::DOUBLE PRECISION),4326),
+                #{item.A},
+                #{item.B},
+                #{item.C},
+                #{item.D},
+                #{item.E},
+                #{item.F},
+                #{item.G},
+                #{item.H}::DOUBLE PRECISION,
+                #{item.I}::DOUBLE PRECISION,
+                'mediaboard',
+                'media',
+                4,
+                1                
+                )
+            </foreach>
+    </insert>
+    
+    <insert id="TownboardExcelupload" parameterType="EgovMap">
+        INSERT INTO townboard (
+                  geom
+                , bd_type
+                , apt_nm
+                , sd_nm
+                , sgg_nm
+                , bjd_nm
+                , address
+                , panel_cnt
+                , households_cnt
+				, ad_sound
+				, split_screen
+				, min_impressions
+				, per_month_1
+		 		, ad_price_month_1
+		 		, per_month_2
+		 		, ad_price_month_2
+		 		, longitude
+				, latitude
+				, type
+				, is_media
+				, dvsn_1_no
+				, dvsn_2_no
+                ) 
+                VALUES
+            <foreach collection="excelContent" item="item" separator=",">   
+                (
+                #{item.A} ::geometry,
+                #{item.B},
+                #{item.C},
+                #{item.D},
+                #{item.E},
+                #{item.F},
+                #{item.G},
+                #{item.H} ::DOUBLE PRECISION,
+                #{item.I} ::DOUBLE PRECISION,
+                #{item.J},
+                #{item.K},
+                #{item.L},
+                #{item.M},
+                #{item.N},
+                #{item.O},
+				#{item.P},
+                #{item.Q} ::DOUBLE PRECISION,
+				#{item.R} ::DOUBLE PRECISION,
+                #{item.S},
+                #{item.T},
+                #{item.U} ::DOUBLE PRECISION,
+                #{item.V} ::DOUBLE PRECISION 
+                )
+            </foreach>
+    </insert>
+    
+    <insert id="EdisplayExcelupload" parameterType="EgovMap">
+        INSERT INTO e_display (
+                gid,
+				geom,
+				name,
+				address,
+				size,
+				spec,
+				ad_price_month,
+				operation_time,
+				media_company,
+				longitude,
+				latitude,
+				type,
+				is_media,
+				dvsn_1_no,
+				dvsn_2_no,
+				weight,
+				order_no,
+				ad_area_cnt,
+				is_del
+                ) 
+                VALUES
+            <foreach collection="excelContent" item="item" separator=",">   
+                (
+                nextval('e-display_id_seq'),
+                ST_SetSRID(ST_MakePoint(#{item.J}::DOUBLE PRECISION, #{item.I}::DOUBLE PRECISION),4326),
+                #{item.A},
+                #{item.B},
+                #{item.C},                
+                #{item.E},
+                replace(#{item.F}, '.0', ''),
+                #{item.G},
+                #{item.H},
+                #{item.I} ::DOUBLE PRECISION,
+                #{item.J} ::DOUBLE PRECISION,
+                'e_display',
+                'media',
+                5,
+                1,
+                0.04,
+                order_no(nextval('e-display_id_seq')::text,6),
+                ${item.D},
+                'N'
+                )
+            </foreach>
+    </insert>
+    
+    <select id="selectEdisplayBufferData" parameterType="EgovMap" resultType="EgovMap">
+    	SELECT GID, GEOM, TYPE, DVSN_1_NO, DVSN_2_NO FROM E_DISPLAY WHERE ADDRESS IN
+    	<foreach collection="excelContent" item="item" open="(" close=")" separator=",">#{item.B}</foreach>
+    </select>
+    
+    <insert id="insertEdisplayBuffer" parameterType="EgovMap">
+        INSERT INTO e_display_buffer (
+        	gid,
+            buffer_geom
+        ) 
+        VALUES
+       	<foreach collection="list" item="item" separator=",">   
+        (
+        	#{item.gid},
+        	ST_BUFFER('${item.geom}', 0.001, 'quad_segs=8')
+        ) 
+        </foreach>
+    </insert>
+    
+    <insert id="BillboardExcelupload" parameterType="EgovMap">
+        INSERT INTO billboard (
+                gid,
+				geom,
+				area,
+				name,
+				road_address,
+				ad_area_cnt,
+				front_size,
+				leftside_size,
+				rightside_size,
+				back_size,
+				ad_price_month,
+				ad_make_price,
+				min_condition,
+				media_company,
+				longitude,
+				latitude,
+				type,
+				is_media,
+				dvsn_1_no,
+				dvsn_2_no,
+				order_no,
+				is_del
+                ) 
+                VALUES
+            <foreach collection="excelContent" item="item" separator=",">   
+                (
+                nextval('billboard_id_seq'),
+                ST_SetSRID(ST_MakePoint(#{item.N}::DOUBLE PRECISION, #{item.M}::DOUBLE PRECISION),4326),
+                #{item.A},
+                #{item.B},
+                #{item.C},
+                ${item.D},
+                #{item.E},
+                #{item.F},
+                #{item.G},
+                #{item.H},
+                replace(#{item.I}, '.0', ''),
+                replace(#{item.J}, '.0', ''),
+                #{item.K},
+                #{item.L},
+                #{item.M} ::DOUBLE PRECISION,
+                #{item.N} ::DOUBLE PRECISION,
+                'billboard',
+                'media',
+                5,
+                2,
+                order_no(nextval('billboard_id_seq')::text,6),
+                'N'
+                )             
+            </foreach>
+    </insert>
+    
+    <select id="selectBillboardBufferData" parameterType="EgovMap" resultType="EgovMap">
+    	SELECT GID, GEOM, TYPE, DVSN_1_NO, DVSN_2_NO FROM BILLBOARD WHERE ROAD_ADDRESS IN
+    	<foreach collection="excelContent" item="item" open="(" close=")" separator=",">#{item.C}</foreach>
+    </select>
+    
+    <insert id="insertBillboardBuffer" parameterType="EgovMap">
+        INSERT INTO billboard_buffer (
+        	gid,
+            buffer_geom
+        ) 
+        VALUES
+       	<foreach collection="list" item="item" separator=",">   
+        (
+        	#{item.gid},
+        	ST_BUFFER('${item.geom}', 0.001, 'quad_segs=8')
+        ) 
+        </foreach>
+    </insert>
+    
+    <insert id="OuterwallExcelupload" parameterType="EgovMap">
+        INSERT INTO outerwall (
+                gid,
+				geom,
+				sd_nm,
+				bd_nm,
+				acpt_law_dvsn_nm,
+				road_address,
+				ad_type,
+				material,
+				lighting,
+				install_qt,
+				term,
+				ad_price,
+				ad_make_price,
+				size,
+				media_company,
+				longitude,
+				latitude,
+				type,
+				is_media,
+				dvsn_1_no,
+				dvsn_2_no,
+				order_no,
+				etc,
+				is_del
+                ) 
+                VALUES
+            <foreach collection="excelContent" item="item" separator=",">   
+                (
+                nextval('outerwall_id_seq'),
+                ST_SetSRID(ST_MakePoint(#{item.O}::DOUBLE PRECISION, #{item.N}::DOUBLE PRECISION),4326),
+                #{item.A},
+                #{item.B},
+                #{item.C},
+                #{item.D},
+                #{item.E},
+                #{item.F},
+                #{item.G},
+                #{item.H},
+                #{item.I},
+                replace(#{item.J}, '.0', ''),
+                replace(#{item.K}, '.0', ''),
+                #{item.L},
+                #{item.M},
+                #{item.N}::DOUBLE PRECISION, 
+                #{item.O}::DOUBLE PRECISION,
+                'outerwall',
+                'media',
+                5,
+                2,
+                order_no(nextval('outerwall_id_seq')::text,6),
+                NULL,
+                'N'
+                )
+            </foreach>
+    </insert>
+    
+    <select id="selectOuterwallBufferData" parameterType="EgovMap" resultType="EgovMap">
+    	SELECT GID, GEOM, TYPE, DVSN_1_NO, DVSN_2_NO FROM OUTERWALL WHERE ROAD_ADDRESS IN
+    	<foreach collection="excelContent" item="item" open="(" close=")" separator=",">#{item.D}</foreach>
+    </select>
+    
+    <insert id="insertOuterwallBuffer" parameterType="EgovMap">
+        INSERT INTO outerwall_buffer (
+        	gid,
+            buffer_geom
+        ) 
+        VALUES
+       	<foreach collection="list" item="item" separator=",">   
+        (
+        	#{item.gid},
+        	ST_BUFFER('${item.geom}', 0.001, 'quad_segs=8')
+        ) 
+        </foreach>
+    </insert>
+	
+	<select id="mediaBaseGid" parameterType="EgovMap" resultType="EgovMap" >
+		<![CDATA[
+			SELECT BASE 
+			     , ARRAY_TO_STRING(ARRAY_AGG( CAM.GID),',') AS GID 
+			  FROM BASE_TYPE B,
+				   (SELECT CM.GID 
+				         , CM.DVSN_1_NO 
+				         , CM.DVSN_2_NO 
+				      FROM CAMPAIGN C , CAMPAIGN_MEDIA CM
+				     WHERE 1=1
+				       AND C.C_CTXT= #{cCtxt}
+				       AND C.C_NO = CM.C_NO) CAM
+			 WHERE 1=1
+			   AND B.DVSN_1_NO = CAM.DVSN_1_NO
+			   AND B.DVSN_2_NO = CAM.DVSN_2_NO
+			   AND B.is_media = 'media'
+			 GROUP BY B.BASE
+		]]>
+	</select>
+
+	<select id="mediaInfoList"  parameterType="EgovMap" resultType="EgovMap">
+		SELECT *FROM ${media } where gid in (${gid })
+	</select>
+	
+	<select id="campaingNm" parameterType="EgovMap" resultType="EgovMap">
+		SELECT c_tit FROM campaign WHERE C_CTXT= #{cCtxt}
+	</select>
+	
+	<select id="SelectAccessLog" parameterType="EgovMap" resultType="EgovMap" >
+		<![CDATA[
+			select 	ROW_NUMBER() OVER() as rnum,
+					A.u_id,
+					A.access_url,
+					A.access_time
+			from (
+   				 select
+						 u_id,
+						 access_url,
+						 access_time
+    			from access_log
+		]]>
+		<if test="keyword != null and keyword != '' ">
+			where u_id like CONCAT('%', #{keyword}, '%')
+			OR access_url like CONCAT('%', #{keyword}, '%')
+		</if>	
+		<![CDATA[
+    		order by access_time desc )
+			A limit #{cntPerPage} offset #{start}
+		]]>
+	</select>
+	
+	<select id="selectLogCount" parameterType="EgovMap" resultType="int" >
+		<![CDATA[
+			select 
+				count(*) 
+			from access_log
+		]]>
+		<if test="keyword != null and keyword != '' ">
+     		where u_id like CONCAT('%', #{keyword}, '%')
+			OR access_url like CONCAT('%', #{keyword}, '%')
+		</if>
+	</select>
+	
+	<select id="selectImglist" parameterType="EgovMap" resultType="EgovMap" >
+		<![CDATA[
+			SELECT file_svr_name FROM campaign_img
+		]]>
+		<trim prefix="WHERE" prefixOverrides="AND|OR">
+		<if test="filelistOrgN1 != fileName1">
+			c_ctxt = #{cCtxt } and campaign_img_no = #{filelistNo1} ::integer
+		</if>
+		<if test="filelistOrgN2 != fileName2">
+			OR c_ctxt = #{cCtxt } and campaign_img_no = #{filelistNo2} ::integer
+		</if>
+		<if test="filelistOrgN3 != fileName3">
+			OR c_ctxt = #{cCtxt } and campaign_img_no = #{filelistNo3} ::integer
+		</if>
+		</trim>
+	</select>
+	
+	<select id="fileListCheck" parameterType="EgovMap" resultType="EgovMap" >
+		<![CDATA[
+			SELECT * FROM campaign_img WHERE c_ctxt = #{cCtxt }
+		]]>
+	</select>
+	
+	<insert id="insertFile" parameterType="EgovMap">
+		<![CDATA[
+		INSERT INTO campaign_img(
+			c_ctxt
+			,file_org_name
+			,file_svr_name
+			,size
+		)
+		VALUES ( 
+			#{cCtxt }
+			,#{fileOrgName }
+			,#{savefilename }
+			,#{size }
+		)
+		]]>
+	</insert>
+
+	<delete id="deleteFile" parameterType="EgovMap">
+		<![CDATA[
+			DELETE FROM campaign_img
+		 ]]>
+		 <trim prefix="WHERE" prefixOverrides="AND|OR">
+		 	OR file_svr_name = #{fileSvrName0 }
+		 	OR file_svr_name = #{fileSvrName1 }
+		 	OR file_svr_name = #{fileSvrName2 }
+		 </trim>
+	</delete>
+	
+	<insert id="insertPptFile" parameterType="EgovMap">
+		<![CDATA[
+		INSERT INTO campaign_ppt(
+			c_ctxt
+			,file_org_name
+			,file_svr_name
+			,size
+		)
+		VALUES ( 
+			#{cCtxt }
+			,#{fileOrgName }
+			,#{savefilename }
+			,#{size }
+		)
+		]]>
+	</insert>
+	
+	<select id="selectSearchFile" parameterType="EgovMap" resultType="EgovMap" >
+		<![CDATA[
+			select campaign_ppt_no from campaign_ppt where c_ctxt = #{cCtxt}
+		]]>
+	</select>
+	
+	<insert id="insertCampaignPpt" parameterType="EgovMap">
+		<![CDATA[
+			INSERT INTO campaign_ppt(
+				c_ctxt
+				,file_org_name
+				,file_svr_name
+				,size
+			)
+			VALUES ( 
+				#{cCtxt}
+				,#{fileOrgName}
+				,#{savefilename}
+				,#{size}
+			)
+		]]>
+	</insert>
+	
+	<select id="userIdList" parameterType="EgovMap" resultType="EgovMap">
+		<![CDATA[
+			SELECT id FROM a_01_info where u_auth='B' or u_auth='N' order by id
+		]]>
+	</select>
+	
+	<insert id="noticeMessageSend" parameterType="EgovMap">
+		<![CDATA[
+			INSERT INTO message(
+					message_id
+					,sender
+					,reciever
+					,title
+					,contents
+					,recieve_date
+					,is_del)
+			VALUES (
+					nextval('message_message_id_seq')
+					,1
+					,#{id }
+					,#{title }
+					,#{content }
+					,NULL
+					,'N');
+		]]>
+	</insert>
+	
+	<insert id="busGetOnoffExcelupload" parameterType="EgovMap">
+        INSERT INTO bus_get_onoff (
+                  use_dt
+                , bus_route_no
+                , bus_route_nm
+                , bus_route_id
+                , bsst_ars_no
+                , bus_sta_nm
+                , ride_pasgr_num
+                , alight_pasgr_num
+                , work_dt
+                ) 
+                VALUES
+            <foreach collection="excelContent" item="item" separator=",">   
+                (
+                #{item.A},
+                #{item.B},
+                #{item.C},
+                #{item.D} ::DOUBLE PRECISION,
+                #{item.E} ::DOUBLE PRECISION,
+                #{item.F},
+                #{item.G} ::DOUBLE PRECISION,
+                #{item.H} ::DOUBLE PRECISION,
+                #{item.I}
+                )
+            </foreach>
+    </insert>
+    
+    <select id="busGetOnoffList" parameterType="EgovMap" resultType="EgovMap">
+		<![CDATA[
+			SELECT * FROM bus_get_onoff
+		]]>
+	</select>
+	
+	<insert id="stationGetOnoffExcelupload" parameterType="EgovMap">
+        INSERT INTO station_get_onoff (
+                  use_dt
+                , line_num
+                , sub_sta_nm
+                , ride_pasgr_num
+                , alight_pasgr_num
+                , work_dt
+                ) 
+                VALUES
+            <foreach collection="excelContent" item="item" separator=",">   
+                (
+                #{item.A},
+                #{item.B},
+                #{item.C},
+                #{item.D} ::DOUBLE PRECISION,
+                #{item.E} ::DOUBLE PRECISION,
+                #{item.F}
+                )
+            </foreach>
+    </insert>
+	
+	<select id="stationGetOnoffList" parameterType="EgovMap" resultType="EgovMap">
+		<![CDATA[
+			SELECT * FROM station_get_onoff
+		]]>
+	</select>
+	
+	<select id="selectExtentionList" resultType="EgovMap">
+		<![CDATA[
+			SELECT A.r_no
+				, A.c_ctxt
+				, B.c_tit
+				, B.s_dt
+				, A.b_date
+				, A.n_date
+				, A.req_advr
+				, A.r_prgs_stts
+				, A.res_reject
+				, B.c_advr
+			FROM (SELECT
+					    *
+					FROM
+					    (SELECT*,
+					        ROW_NUMBER() OVER(PARTITION BY c_ctxt ORDER BY r_no DESC) as row_idx
+					    FROM
+					        req_extention
+					    WHERE r_prgs_stts = 'I') A
+					WHERE
+					    row_idx = 1) A
+			LEFT OUTER JOIN CAMPAIGN B ON A.C_CTXT = B.C_CTXT
+		]]>
+	</select>
+	
+	<update id="resExtension" parameterType="EgovMap">
+		<![CDATA[
+			UPDATE req_extention
+			SET res_advr = #{adminId}
+				, res_date = now()
+				, r_prgs_stts = #{prgsStts}
+				, res_reject = #{resReject}
+			WHERE r_no = #{rNo}::integer
+		]]>
+	</update>
+	
+	<update id="updateExtension" parameterType="EgovMap">
+		<![CDATA[
+			UPDATE campaign
+			SET e_dt = to_date(#{nDate},'YYYY-MM-DD')
+				, m_dt = now()
+			WHERE c_ctxt = #{cid}
+		]]>
+	</update>
+	
+	<insert id="insertExtCampaign" parameterType="EgovMap">
+		<![CDATA[
+			INSERT INTO campaign 
+			            (c_ctxt,
+			             c_tit, 
+			             c_advr, 
+			             s_dt, 
+			             e_dt, 
+			             c_dt,  
+			             t_ag, 
+			             t_gndr, 
+			             c_bdgt_lmt, 
+			             c_bdgt_rslt, 
+			             c_prgs_stts, 
+			             a_sgst, 
+			             c_wrtr, 
+			             is_nw, 
+			             total_ots, 
+			             target_ots) 
+			SELECT #{newCid},
+				   '[복제]'||c_tit, 
+			       c_advr, 
+			       e_dt, 
+			       to_date(#{nDate},'YYYY-MM-DD'), 
+			       now(), 
+			       t_ag, 
+			       t_gndr, 
+			       c_bdgt_lmt, 
+			       c_bdgt_rslt, 
+			       '2', 
+			       a_sgst, 
+			       c_wrtr, 
+			       'Y', 
+			       total_ots, 
+			       target_ots 
+			FROM   campaign 
+			WHERE  c_ctxt = #{cid}
+		]]>
+	</insert>
+	
+	<insert id="insertExtCampaignMedia" parameterType="EgovMap">
+		<![CDATA[
+			INSERT INTO campaign_media 
+			            (c_no, 
+			             is_media, 
+			             dvsn_1_no, 
+			             dvsn_2_no, 
+			             gid, 
+			             icon_type, 
+			             icon_color, 
+			             pre_target_ots, 
+			             pre_total_ots) 
+			SELECT (SELECT c_no 
+			        FROM   campaign 
+			        WHERE  c_ctxt = #{newCid}), 
+			       is_media, 
+			       dvsn_1_no, 
+			       dvsn_2_no, 
+			       gid, 
+			       icon_type, 
+			       icon_color, 
+			       pre_target_ots, 
+			       pre_total_ots 
+			FROM   campaign_media 
+			WHERE  c_no = (SELECT c_no 
+			               FROM   campaign 
+			               WHERE  c_ctxt = #{cid}) 
+		]]>
+	</insert>
+	
+	<insert id="insertExtCampaignTargeting" parameterType="EgovMap">
+		<![CDATA[
+			INSERT INTO campaign_targeting 
+			            (tid, 
+			             c_no, 
+			             s_dt, 
+			             e_dt, 
+			             t_ag, 
+			             t_gndr, 
+			             is_base) 
+			SELECT tid,
+				   (SELECT c_no 
+			       	FROM   campaign 
+			       	WHERE  c_ctxt = #{newCid}), 
+			       s_dt, 
+		           e_dt, 
+		           t_ag, 
+		           t_gndr, 
+		           is_base
+			FROM   campaign_targeting 
+			WHERE  c_no = (SELECT c_no 
+			               FROM   campaign 
+			               WHERE  c_ctxt = #{cid}) 
+		]]>
+	</insert>
+	
+	<select id="selectNewMsgList" resultType="EgovMap">
+			with C AS (
+			    with B AS (
+			        with A AS (
+			            (select contents, write_date, sender from inquire where sender is not null order by write_date desc)
+			            union all
+			            (select contents, send_date as write_date, reciever as sender from message where reciever is not null order by send_date desc)
+			        )select * from A order by write_date desc
+			    )select ROW_NUMBER() OVER() as rownum, * from B
+			)select contents, write_date::date, sender, COALESCE(D.u_id,'대화상대 없음') as u_id, u_nm from C left outer join a_01_info D on C.sender = D.id
+			where rownum in (select min(rownum) from C group by sender)
+	</select>
+	
+	<select id="selectSendList" parameterType="EgovMap" resultType="EgovMap">
+		SELECT CONTENTS, WRITE_DATE, FLAG FROM
+		(
+		SELECT CONTENTS, TO_CHAR(WRITE_DATE, 'YYYY-MM-DD HH24:MI:SS') AS WRITE_DATE, 'U' AS FLAG FROM INQUIRE WHERE SENDER = ${id}
+		UNION ALL
+		SELECT CONTENTS, TO_CHAR(SEND_DATE, 'YYYY-MM-DD HH24:MI:SS') AS WRITE_DATE, 'A' AS FLAG FROM MESSAGE WHERE RECIEVER = ${id}
+		) A 
+		ORDER BY WRITE_DATE
+	</select>
+	
+	<insert id="insertSendMessage" parameterType="EgovMap">
+		INSERT INTO message(
+					message_id
+					,sender
+					,reciever
+					,title
+					,contents
+					,send_date
+					,recieve_date
+					,is_del)
+			VALUES (
+					nextval('message_message_id_seq'),
+					'1',
+					${id},
+					'관리자 메세지',
+					#{inputmsg},
+					now(),
+					NULL,
+					'N');
+	</insert>
+	
+	<select id="selectPopSList" resultType="EgovMap">
+		<![CDATA[
+			select 	rnum,
+					A.gid,
+					A.shelter_nm,
+					A.shelter_dvsn_nm,
+					A.media_id,
+					A.sgg_nm,
+					A.emd_nm,
+					A.ad_type,
+					A.ad_rating,
+					A.sug_area
+			from (
+   				 select  ROW_NUMBER() OVER() as rnum,
+						 gid,
+						 shelter_nm,
+						 shelter_dvsn_nm,
+						 media_id,
+						 sgg_nm,
+						 emd_nm,
+						 ad_type,
+						 ad_rating,
+						 sug_area
+    			from shelter
+    	]]>
+		<if test="keyword != null and keyword != '' ">
+			where shelter_nm like CONCAT('%', #{keyword}, '%')
+			OR shelter_dvsn_nm like CONCAT('%', #{keyword}, '%')
+			OR media_id like CONCAT('%', #{keyword}, '%')
+			OR sgg_nm like CONCAT('%', #{keyword}, '%')
+			OR emd_nm like CONCAT('%', #{keyword}, '%')
+			OR ad_type like CONCAT('%', #{keyword}, '%')
+			OR ad_rating like CONCAT('%', #{keyword}, '%')
+			OR sug_area like CONCAT('%', #{keyword}, '%')
+			OR lighting like CONCAT('%', #{keyword}, '%')
+			OR ad_price_month like CONCAT('%', #{keyword}, '%')
+			OR ad_make_price like CONCAT('%', #{keyword}, '%')
+			OR inner_size like CONCAT('%', #{keyword}, '%')
+			OR outer_size like CONCAT('%', #{keyword}, '%')	
+		</if>	
+		<![CDATA[
+    			order by gid desc ) A
+				where rnum between #{start} and #{end}
+		]]>
+	</select>
+	
+	<select id="selectPopSCount" parameterType="EgovMap" resultType="int" >
+		<![CDATA[
+			select 
+				count(*) 
+			from shelter
+		]]>
+		<if test="keyword != null and keyword != '' ">
+     		where shelter_nm like CONCAT('%', #{keyword}, '%')
+			OR shelter_dvsn_nm like CONCAT('%', #{keyword}, '%')
+			OR media_id like CONCAT('%', #{keyword}, '%')
+			OR sgg_nm like CONCAT('%', #{keyword}, '%')
+			OR emd_nm like CONCAT('%', #{keyword}, '%')
+			OR ad_type like CONCAT('%', #{keyword}, '%')
+			OR ad_rating like CONCAT('%', #{keyword}, '%')
+			OR sug_area like CONCAT('%', #{keyword}, '%')
+			OR lighting like CONCAT('%', #{keyword}, '%')
+			OR ad_price_month like CONCAT('%', #{keyword}, '%')
+			OR ad_make_price like CONCAT('%', #{keyword}, '%')
+			OR inner_size like CONCAT('%', #{keyword}, '%')
+			OR outer_size like CONCAT('%', #{keyword}, '%')	
+		</if>
+	</select>
+	
+	<select id="selectPopPList" resultType="EgovMap">
+		<![CDATA[
+			select 	rnum,
+					A.gid,
+					A.line,
+					A.metro_cd,
+					A.psd_metro,
+					A.psd_no,
+					A.psd_type,
+					A.ad_price_month,
+					A.ad_make_price,
+					A.ad_package
+			from (
+   				 select  ROW_NUMBER() OVER() as rnum,
+						 gid, 
+						 line,
+						 metro_cd, 
+						 psd_metro,
+						 psd_no, 
+						 psd_type, 
+						 ad_price_month, 
+						 ad_make_price, 
+						 ad_package
+    			from psd
+    	]]>
+				<if test="keyword != null and keyword != '' ">
+					where line like CONCAT('%', #{keyword}, '%')
+					OR metro_cd like CONCAT('%', #{keyword}, '%')
+					OR psd_metro like CONCAT('%', #{keyword}, '%')
+					OR psd_no like CONCAT('%', #{keyword}, '%')
+					OR psd_type like CONCAT('%', #{keyword}, '%')
+					OR ad_price_month like CONCAT('%', #{keyword}, '%')
+					OR ad_make_price like CONCAT('%', #{keyword}, '%')
+					OR ad_package like CONCAT('%', #{keyword}, '%')
+					OR operation_company like (CONCAT('%', #{keyword}, '%'))
+				</if>
+		<![CDATA[
+    			order by gid desc ) A
+				where rnum between #{start} and #{end}
+		]]>
+	</select>
+	
+	<select id="selectPopPCount" parameterType="EgovMap" resultType="int" >
+		<![CDATA[
+			select 
+				count(*) 
+			from psd
+		]]>
+			<if test="keyword != null and keyword != '' ">
+	  			where line like CONCAT('%', #{keyword}, '%')
+				OR metro_cd like CONCAT('%', #{keyword}, '%')
+				OR psd_metro like CONCAT('%', #{keyword}, '%')
+				OR psd_no like CONCAT('%', #{keyword}, '%')
+				OR psd_type like CONCAT('%', #{keyword}, '%')
+				OR ad_price_month like CONCAT('%', #{keyword}, '%')
+				OR ad_make_price like CONCAT('%', #{keyword}, '%')
+				OR ad_package like CONCAT('%', #{keyword}, '%')
+				OR operation_company like CONCAT('%', #{keyword}, '%')
+			</if>
+	</select>
+	
+	<select id="selectPopGList" resultType="EgovMap">
+		<![CDATA[
+			select 	rnum,
+					A.gid,
+					A.line,
+					A.ad_rating,
+					A.station_nm,
+					A.media_type,
+					A.quantity,
+					A.unit_price,
+					A.ad_price_month
+			from (
+   				 select  ROW_NUMBER() OVER() as rnum,
+						 gid, 
+						line, 
+						ad_rating, 
+						station_nm, 
+						media_type, 
+						quantity, 
+						unit_price, 
+						ad_price_month 
+    			from gdia
+    			]]>
+				<if test="keyword != null and keyword != '' ">
+					where line like CONCAT('%', #{keyword}, '%')
+					OR ad_rating like CONCAT('%', #{keyword}, '%')
+					OR station_nm like CONCAT('%', #{keyword}, '%')
+					OR media_type like CONCAT('%', #{keyword}, '%')
+					OR unit_price like CONCAT('%', #{keyword}, '%')
+					OR ad_price_month like CONCAT('%', #{keyword}, '%')	
+				</if>		
+		<![CDATA[
+    			order by gid desc ) A
+				where rnum between #{start} and #{end}
+		]]>
+	</select>
+	
+	<select id="selectPopGCount" parameterType="EgovMap" resultType="int" >
+		<![CDATA[
+			select 
+				count(*) 
+			from gdia
+			]]>
+			<if test="keyword != null and keyword != '' ">
+	  			where line like CONCAT('%', #{keyword}, '%')
+				OR ad_rating like CONCAT('%', #{keyword}, '%')
+				OR station_nm like CONCAT('%', #{keyword}, '%')
+				OR media_type like CONCAT('%', #{keyword}, '%')
+				OR unit_price like CONCAT('%', #{keyword}, '%')
+				OR ad_price_month like CONCAT('%', #{keyword}, '%')	
+			</if>	
+	</select>
+	
+	<select id="selectPopBusList" resultType="EgovMap">
+		<![CDATA[
+			select 	rnum,
+					A.gid,
+					A.route_no,
+					A.ad_rating,
+					A.bus_dvsn_nm,
+					A.start_point,
+					A.end_point,
+					A.ad_price_month,
+					A.ad_make_price,
+					A.operation_company,
+					A.start_time,
+					A.end_time,
+					A.alloc_interval,
+					A.operation_bus,
+					A.media_company
+			from (
+   				 select  ROW_NUMBER() OVER() as rnum,
+						 gid, 
+						route_no, 
+						ad_rating, 
+						bus_dvsn_nm, 
+						start_point, 
+						end_point, 
+						ad_price_month, 
+						ad_make_price, 
+						operation_company, 
+						start_time, 
+						end_time, 
+						alloc_interval, 
+						operation_bus, 
+						media_company 
+    			from bus
+    			]]>
+				<if test="keyword != null and keyword != '' ">
+					where route_no like CONCAT('%', #{keyword}, '%')
+					OR ad_rating like CONCAT('%', #{keyword}, '%')	
+					OR bus_dvsn_nm like CONCAT('%', #{keyword}, '%')	
+					OR start_point like CONCAT('%', #{keyword}, '%')	
+					OR end_point like CONCAT('%', #{keyword}, '%')	
+					OR ad_price_month like CONCAT('%', #{keyword}, '%')	
+					OR ad_make_price like CONCAT('%', #{keyword}, '%')	
+					OR operation_company like CONCAT('%', #{keyword}, '%')	
+					OR start_time like CONCAT('%', #{keyword}, '%')	
+					OR end_time like CONCAT('%', #{keyword}, '%')	
+					OR alloc_interval like CONCAT('%', #{keyword}, '%')	
+					OR media_company like CONCAT('%', #{keyword}, '%')	
+				</if>
+		<![CDATA[
+    			order by gid desc ) A
+				where rnum between #{start} and #{end}
+		]]>
+	</select>
+	
+	<select id="selectPopBusCount" parameterType="EgovMap" resultType="int" >
+		<![CDATA[
+			select 
+				count(*) 
+			from bus
+		]]>
+			<if test="keyword != null and keyword != '' ">
+		  		where route_no like CONCAT('%', #{keyword}, '%')
+				OR ad_rating like CONCAT('%', #{keyword}, '%')	
+				OR bus_dvsn_nm like CONCAT('%', #{keyword}, '%')	
+				OR start_point like CONCAT('%', #{keyword}, '%')	
+				OR end_point like CONCAT('%', #{keyword}, '%')	
+				OR ad_price_month like CONCAT('%', #{keyword}, '%')	
+				OR ad_make_price like CONCAT('%', #{keyword}, '%')	
+				OR operation_company like CONCAT('%', #{keyword}, '%')	
+				OR start_time like CONCAT('%', #{keyword}, '%')	
+				OR end_time like CONCAT('%', #{keyword}, '%')	
+				OR alloc_interval like CONCAT('%', #{keyword}, '%')	
+				OR media_company like CONCAT('%', #{keyword}, '%')
+			</if>	
+	</select>
+	
+	<select id="selectPopMList" resultType="EgovMap">
+		<![CDATA[
+			select 	rnum,
+					A.gid,
+					A.bd_type,
+					A.cplx_nm,
+					A.address,
+					A.ad_rating,
+					A.households_cnt,
+					A.panel_cnt
+			from (
+   				 select  ROW_NUMBER() OVER() as rnum,
+						 gid,
+						bd_type, 
+						cplx_nm, 
+						address, 
+						ad_rating, 
+						households_cnt, 
+						panel_cnt
+    			from mediaboard
+    			]]>
+				<if test="keyword != null and keyword != '' ">
+					where bd_type like CONCAT('%', #{keyword}, '%')
+					OR cplx_nm like CONCAT('%', #{keyword}, '%')
+					OR address like CONCAT('%', #{keyword}, '%')
+					OR ad_rating like CONCAT('%', #{keyword}, '%')
+				</if>
+		<![CDATA[
+    			order by gid desc ) A
+				where rnum between #{start} and #{end}
+		]]>
+	</select>
+	
+	<select id="selectPopMCount" parameterType="EgovMap" resultType="int" >
+		<![CDATA[
+			select 
+				count(*) 
+			from mediaboard
+		]]>
+			<if test="keyword != null and keyword != '' ">
+	 	 		where bd_type like CONCAT('%', #{keyword}, '%')
+				OR cplx_nm like CONCAT('%', #{keyword}, '%')
+				OR address like CONCAT('%', #{keyword}, '%')
+				OR ad_rating like CONCAT('%', #{keyword}, '%')
+			</if>
+	</select>
+	
+	<select id="selectPopTList" resultType="EgovMap">
+		<![CDATA[
+			select 	rnum,
+					A.gid,
+					A.bd_type,
+					A.apt_nm,
+					A.address,
+					A.panel_cnt,
+					A.households_cnt,
+					A.ad_sound,
+					A.split_screen,
+					A.min_impressions,
+					A.per_month_1,
+					A.ad_price_month_1,
+					A.per_month_2,
+					A.ad_price_month_2
+			from (
+   				 select  ROW_NUMBER() OVER() as rnum,
+						 gid,
+						bd_type, 
+						apt_nm, 
+						address, 
+						panel_cnt, 
+						households_cnt, 
+						ad_sound, 
+						split_screen, 
+						min_impressions, 
+						per_month_1, 
+						ad_price_month_1,
+						per_month_2, 
+						ad_price_month_2 
+    			from townboard
+    			]]>
+				<if test="keyword != null and keyword != '' ">
+					where bd_type like CONCAT('%', #{keyword}, '%')
+					OR apt_nm like CONCAT('%', #{keyword}, '%')
+					OR address like CONCAT('%', #{keyword}, '%')
+					OR ad_sound like CONCAT('%', #{keyword}, '%')
+					OR split_screen like CONCAT('%', #{keyword}, '%')
+					OR min_impressions like CONCAT('%', #{keyword}, '%')
+					OR per_month_1 like CONCAT('%', #{keyword}, '%')
+					OR ad_price_month_1 like CONCAT('%', #{keyword}, '%')
+					OR per_month_2 like CONCAT('%', #{keyword}, '%')
+					OR ad_price_month_2 like CONCAT('%', #{keyword}, '%')
+				</if>
+		<![CDATA[
+    			order by gid desc ) A
+				where rnum between #{start} and #{end}
+		]]>
+	</select>
+	
+	<select id="selectPopTCount" parameterType="EgovMap" resultType="int" >
+		<![CDATA[
+			select 
+				count(*) 
+			from townboard
+		]]>
+			<if test="keyword != null and keyword != '' ">
+		 		where bd_type like CONCAT('%', #{keyword}, '%')
+				OR apt_nm like CONCAT('%', #{keyword}, '%')
+				OR address like CONCAT('%', #{keyword}, '%')
+				OR ad_sound like CONCAT('%', #{keyword}, '%')
+				OR split_screen like CONCAT('%', #{keyword}, '%')
+				OR min_impressions like CONCAT('%', #{keyword}, '%')
+				OR per_month_1 like CONCAT('%', #{keyword}, '%')
+				OR ad_price_month_1 like CONCAT('%', #{keyword}, '%')
+				OR per_month_2 like CONCAT('%', #{keyword}, '%')
+				OR ad_price_month_2 like CONCAT('%', #{keyword}, '%')
+			</if>
+	</select>
+	
+	<select id="selectPopEList" resultType="EgovMap">
+		<![CDATA[
+			select 	rnum,
+					A.gid,
+					A.name,
+					A.address,
+					A.size,
+					A.spec,
+					A.ad_price_month,
+					A.operation_time,
+					A.media_company
+			from (
+   				 select  ROW_NUMBER() OVER() as rnum,
+						 gid, 
+						name, 
+						address, 
+						size, 
+						spec, 
+						ad_price_month, 
+						operation_time, 
+						media_company 	
+    			from e_display
+    			]]>
+				<if test="keyword != null and keyword != '' ">
+					where name like CONCAT('%', #{keyword}, '%')
+					OR address like CONCAT('%', #{keyword}, '%')
+					OR size like CONCAT('%', #{keyword}, '%')
+					OR spec like CONCAT('%', #{keyword}, '%')
+					OR ad_price_month like CONCAT('%', #{keyword}, '%')
+					OR operation_time like CONCAT('%', #{keyword}, '%')
+					OR media_company like CONCAT('%', #{keyword}, '%')
+				</if>
+		<![CDATA[
+    			order by gid desc ) A
+				where rnum between #{start} and #{end}
+		]]>
+	</select>
+	
+	<select id="selectPopECount" parameterType="EgovMap" resultType="int" >
+		<![CDATA[
+			select 
+				count(*) 
+			from e_display
+		]]>
+			<if test="keyword != null and keyword != '' ">
+		 	 	where name like CONCAT('%', #{keyword}, '%')
+				OR address like CONCAT('%', #{keyword}, '%')
+				OR size like CONCAT('%', #{keyword}, '%')
+				OR spec like CONCAT('%', #{keyword}, '%')
+				OR ad_price_month like CONCAT('%', #{keyword}, '%')
+				OR operation_time like CONCAT('%', #{keyword}, '%')
+				OR media_company like CONCAT('%', #{keyword}, '%')
+			</if>
+	</select>
+	
+	<select id="selectPopBList" resultType="EgovMap">
+		<![CDATA[
+			select 	rnum,
+					A.gid,
+					A.name,
+					A.road_address,
+					A.ad_area_cnt,
+					A.front_size,
+					A.leftside_size,
+					A.rightside_size,
+					A.back_size,
+					A.ad_price_month,
+					A.ad_make_price,
+					A.min_condition,
+					A.media_company
+			from (
+   				 select  ROW_NUMBER() OVER() as rnum,
+						 gid, 
+						name,
+						road_address, 
+						ad_area_cnt, 
+						front_size, 
+						leftside_size, 
+						rightside_size, 
+						back_size, 
+						ad_price_month, 
+						ad_make_price, 
+						min_condition, 
+						media_company
+    			from billboard
+    			]]>
+				<if test="keyword != null and keyword != '' ">
+					where name like CONCAT('%', #{keyword}, '%')
+					OR road_address like CONCAT('%', #{keyword}, '%')
+					OR front_size like CONCAT('%', #{keyword}, '%')
+					OR leftside_size like CONCAT('%', #{keyword}, '%')
+					OR rightside_size like CONCAT('%', #{keyword}, '%')
+					OR back_size like CONCAT('%', #{keyword}, '%')
+					OR ad_price_month like CONCAT('%', #{keyword}, '%')
+					OR ad_make_price like CONCAT('%', #{keyword}, '%')
+					OR min_condition like CONCAT('%', #{keyword}, '%')
+					OR media_company like CONCAT('%', #{keyword}, '%')
+				</if>
+		<![CDATA[
+    			order by gid desc ) A
+				where rnum between #{start} and #{end}
+		]]>
+	</select>
+	
+	<select id="selectPopBCount" parameterType="EgovMap" resultType="int" >
+		<![CDATA[
+			select 
+				count(*) 
+			from billboard
+		]]>
+			<if test="keyword != null and keyword != '' ">
+		 	 	where name like CONCAT('%', #{keyword}, '%')
+				OR road_address like CONCAT('%', #{keyword}, '%')
+				OR front_size like CONCAT('%', #{keyword}, '%')
+				OR leftside_size like CONCAT('%', #{keyword}, '%')
+				OR rightside_size like CONCAT('%', #{keyword}, '%')
+				OR back_size like CONCAT('%', #{keyword}, '%')
+				OR ad_price_month like CONCAT('%', #{keyword}, '%')
+				OR ad_make_price like CONCAT('%', #{keyword}, '%')
+				OR min_condition like CONCAT('%', #{keyword}, '%')
+				OR media_company like CONCAT('%', #{keyword}, '%')
+			</if>
+	</select>
+	
+	<select id="selectPopOList" resultType="EgovMap">
+		<![CDATA[
+			select 	rnum,
+					A.gid,
+					A.bd_nm,
+					A.acpt_law_dvsn_nm,
+					A.road_address,
+					A.ad_type,
+					A.material,
+					A.lighting,
+					A.install_qt,
+					A.term,
+					A.ad_price,
+					A.ad_make_price,
+					A.size,
+					A.media_company
+			from (
+   				 select  ROW_NUMBER() OVER() as rnum,
+						gid, 
+						bd_nm, 
+						acpt_law_dvsn_nm, 
+						road_address, 
+						ad_type, 
+						material, 
+						lighting, 
+						install_qt, 
+						term, 
+						ad_price, 
+						ad_make_price, 
+						size, 
+						media_company 
+    			from outerwall
+    			]]>
+			<if test="keyword != null and keyword != '' ">
+				where bd_nm like CONCAT('%', #{keyword}, '%')
+				OR acpt_law_dvsn_nm like CONCAT('%', #{keyword}, '%')
+				OR road_address like CONCAT('%', #{keyword}, '%')
+				OR ad_type like CONCAT('%', #{keyword}, '%')
+				OR material like CONCAT('%', #{keyword}, '%')
+				OR lighting like CONCAT('%', #{keyword}, '%')
+				OR install_qt like CONCAT('%', #{keyword}, '%')
+				OR term like CONCAT('%', #{keyword}, '%')
+				OR ad_price like CONCAT('%', #{keyword}, '%')
+				OR ad_make_price like CONCAT('%', #{keyword}, '%')
+				OR size like CONCAT('%', #{keyword}, '%')
+				OR media_company like CONCAT('%', #{keyword}, '%')
+			</if>	
+		<![CDATA[
+    			order by gid desc ) A
+				where rnum between #{start} and #{end}
+		]]>
+	</select>
+	
+	<select id="selectPopOCount" parameterType="EgovMap" resultType="int" >
+		<![CDATA[
+			select 
+				count(*) 
+			from outerwall			
+		]]>
+			<if test="keyword != null and keyword != '' ">
+		  		where bd_nm like CONCAT('%', #{keyword}, '%')
+				OR acpt_law_dvsn_nm like CONCAT('%', #{keyword}, '%')
+				OR road_address like CONCAT('%', #{keyword}, '%')
+				OR ad_type like CONCAT('%', #{keyword}, '%')
+				OR material like CONCAT('%', #{keyword}, '%')
+				OR lighting like CONCAT('%', #{keyword}, '%')
+				OR install_qt like CONCAT('%', #{keyword}, '%')
+				OR term like CONCAT('%', #{keyword}, '%')
+				OR ad_price like CONCAT('%', #{keyword}, '%')
+				OR ad_make_price like CONCAT('%', #{keyword}, '%')
+				OR size like CONCAT('%', #{keyword}, '%')
+				OR media_company like CONCAT('%', #{keyword}, '%')	
+			</if>
+	</select>
+	
+	<select id="selectGidtoDvsn" parameterType="EgovMap" resultType="EgovMap">
+		select dvsn_1_no, dvsn_2_no from ${media} where gid = ${gid}
+	</select>
+	
+	<insert id="insertIntroduction" parameterType="EgovMap">
+		INSERT INTO introduction(
+			dvsn_1_no,
+			dvsn_2_no,
+			gid,
+			file_org_name,
+			file_svr_name,
+			size
+		)
+		VALUES ( 
+			${dvsn1No},
+			${dvsn2No},
+			${gid},
+			#{orgNm},
+			#{svrNm},
+			#{size}::text
+		)
+	</insert>
+	
+	<insert id="insertMakeingGuide" parameterType="EgovMap">
+		INSERT INTO makeing_guide(
+			dvsn_1_no,
+			dvsn_2_no,
+			gid,
+			file_org_name,
+			file_svr_name,
+			size
+		)
+		VALUES ( 
+			${dvsn1No},
+			${dvsn2No},
+			${gid},
+			#{orgNm},
+			#{svrNm},
+			#{size}::text
+		)
+	</insert>
+	
+	<insert id="insertPopImg" parameterType="EgovMap">
+		INSERT INTO popup_img(
+			dvsn_1_no,
+			dvsn_2_no,
+			gid,
+			file_org_name,
+			file_svr_name,
+			size,
+			upload_dt
+		)
+		VALUES ( 
+			${dvsn1No},
+			${dvsn2No},
+			${gid},
+			#{orgNm},
+			#{svrNm},
+			#{size}::text,
+			now(),
+			<choose>
+				<when test="dvsn1No eq 2">
+					'Y'
+				</when>
+				<otherwise>
+					'N'
+				</otherwise>
+			</choose>
+		),
+		( 
+			${dvsn1No},
+			${dvsn2No},
+			${gid},
+			#{orgNm2},
+			#{svrNm2},
+			#{size2}::text,
+			now(),
+			'N'
+		),
+		( 
+			${dvsn1No},
+			${dvsn2No},
+			${gid},
+			#{orgNm3},
+			#{svrNm3},
+			#{size3}::text,
+			now(),
+			'N'
+		)
+	</insert>
+	
+	<select id="selectGidList" parameterType="EgovMap" resultType="EgovMap">
+		<if test="media.equals('shelter')">
+			select gid from shelter where shelter_dvsn_nm = #{typeCombo} and ad_type = #{shelterType}
+		</if>
+		<if test="media.equals('psd')">
+			select gid from psd where psd_type = #{typeCombo}
+		</if>
+		<if test="media.equals('gdia')">
+			select gid from gdia where ad_rating = #{typeCombo}
+		</if>
+		<if test="media.equals('bus')">
+			select gid from bus where bus_dvsn_nm = #{typeCombo}
+		</if>
+		<if test="media.equals('mediaboard')">
+			select gid from mediaboard
+		</if>
+		<if test="media.equals('townboard')">
+			select gid from townboard
+		</if>
+		<if test="media.equals('e_display')">
+			select gid from e_display
+		</if>
+		<if test="media.equals('billboard')">
+			select gid from billboard
+		</if>
+		<if test="media.equals('outerwall')">
+			select gid from outerwall
+		</if>
+	</select>
+	
+	<select id="seleceReDBshelterList" resultType="EgovMap">
+		<![CDATA[
+			select 	rnum,
+					A.id,
+					A.dvsn_1_no,
+					A.dvsn_2_no,
+					A.gid,
+					A.media_l_id,
+					A.media_id,
+					A.start_date,
+					A.end_date,
+					A.book_type,
+					A.book_company
+			from (
+   				 select  ROW_NUMBER() OVER() as rnum,
+						 id,
+						 dvsn_1_no,
+						 dvsn_2_no,
+						 gid,
+						 media_l_id,
+						 media_id,
+						 start_date,
+						 end_date,
+						 book_type,
+						 book_company
+    			from book_media
+    	]]>
+		<if test="keyword != null and keyword != '' ">
+			where media_id like CONCAT('%', #{keyword}, '%')
+			OR start_date like CONCAT('%', #{keyword}, '%')
+			OR end_date like CONCAT('%', #{keyword}, '%')
+			OR book_type like CONCAT('%', #{keyword}, '%')
+			OR book_company like CONCAT('%', #{keyword}, '%')
+		</if>	
+		<![CDATA[
+    			order by id desc ) A
+				where rnum between #{start} and #{end}
+		]]>
+	</select>
+	
+	<select id="selectReDBshelterCount" parameterType="EgovMap" resultType="int" >
+		<![CDATA[
+			select 
+				count(*) 
+			from book_media
+		]]>
+		<if test="keyword != null and keyword != '' ">
+			where media_id like CONCAT('%', #{keyword}, '%')
+			OR start_date like CONCAT('%', #{keyword}, '%')
+			OR end_date like CONCAT('%', #{keyword}, '%')
+			OR book_type like CONCAT('%', #{keyword}, '%')
+			OR book_company like CONCAT('%', #{keyword}, '%')
+		</if>	
+	</select>
+	
+	<select id="selectSearchList" parameterType="EgovMap" resultType="EgovMap">
+		select gid, dvsn_1_no, dvsn_2_no, shelter_id, media_id, #{sDt} as s_dt, #{eDt} as e_dt, #{bookType} as book_type, #{bookCompany} as book_company from shelter where media_id = #{searchId}
+	</select>
+	
+	<insert id="insertReservationDB" parameterType="EgovMap">
+		INSERT INTO book_media(
+			dvsn_1_no,
+			dvsn_2_no,
+			gid,
+			media_l_id,
+			media_id,
+			start_date,
+			end_date,
+			book_type,
+			book_company
+		)
+		VALUES ( 
+			${dvsn1No}::integer,
+			${dvsn2No}::integer,
+			${gid}::integer,
+			#{shelterId}::text,
+			#{mediaId}::text,
+			#{sDt}::date,
+			#{eDt}::date,
+			#{bookType}::text,
+			#{bookCompany}::text
+		)
+	</insert>
+	
+	<delete id="deleteReservationDB" parameterType="EgovMap">
+		<![CDATA[
+			DELETE FROM book_media WHERE gid = #{gid}::integer 
+		 ]]>
+	</delete>
+	
+	<select id="selectDataMgmtApiInfo" parameterType="EgovMap" resultType="EgovMap">
+		select api_url, api_key, api_service, api_type, api_name as table from api_info where api_name = #{name}
+	</select>
+	
+	<update id="updateApiInfo" parameterType="EgovMap">
+		UPDATE api_info SET api_url = #{apiUrl}, api_key = #{apiKey}, api_service = #{apiService}, api_type = #{apiType} WHERE api_name = #{apiName};
+	</update>
+	
+	<select id="selectScheduledLog" parameterType="EgovMap" resultType="EgovMap">
+		<if test="name.equals('localPeople') or name.equals('cardSubway' )">
+			select use_dt::date, work_dt::date, size, list_total_count, code, message from scheduled_log where menu = #{name}
+     		order by work_dt desc limit 1000
+		</if>
+		<if test="name.equals('localPeopleJGG')">
+			select use_dt, substring(work_dt, 1, 8)::date as work_dt, size, list_total_count, code, message from scheduled_log where menu = #{name} and code != 'INFO-999'
+     		order by work_dt desc limit 1000
+		</if>
+	</select>
+	
+</mapper>

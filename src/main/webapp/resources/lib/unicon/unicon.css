@@ -1,0 +1,1018 @@
+@charset "UTF-8";
+
+.unicon {
+	display: inline-block;
+	vertical-align: -2px;
+	margin-right: 6px;
+	border-radius: 10px;
+}
+
+.unicon i{
+	width: 14px;
+	height: 14px;
+	display:block;
+	content: "";
+	background-repeat: no-repeat;
+	background-size: 100%;
+}
+
+.unicon:hover {
+	cursor: pointer;
+}
+
+.unicon-l {
+	display: inline-block;
+	margin-bottom: -2px;
+	border-radius: 10px;
+}
+
+.unicon-l i{
+	width: 20px;
+	height: 20px;
+	display:block;
+	content: "";
+	background-repeat: no-repeat;
+	background-size: 100%;
+}
+
+
+
+i.unicon-circle-blue-fill {
+	background-image: url('/resources/unicon/unicon-circle-blue-fill.svg');
+}
+
+i.unicon-circle-blue-empty {
+	background-image: url('/resources/unicon/unicon-circle-blue-empty.svg');
+}
+
+i.unicon-square-blue-fill {
+	background-image: url('/resources/unicon/unicon-square-blue-fill.svg');
+}
+
+i.unicon-square-blue-empty {
+	background-image: url('/resources/unicon/unicon-square-blue-empty.svg');
+}
+
+i.unicon-triangle-blue-fill {
+	background-image: url('/resources/unicon/unicon-triangle-blue-fill.svg');
+}
+
+i.unicon-triangle-blue-empty {
+	background-image:
+		url('/resources/unicon/unicon-triangle-blue-empty.svg');
+}
+
+i.unicon-rvstriangle-blue-fill {
+	background-image:
+		url('/resources/unicon/unicon-rvstriangle-blue-fill.svg');
+}
+
+i.unicon-rvstriangle-blue-empty {
+	background-image:
+		url('/resources/unicon/unicon-rvstriangle-blue-empty.svg');
+}
+
+i.unicon-star-blue-fill {
+	background-image: url('/resources/unicon/unicon-star-blue-fill.svg');
+}
+
+i.unicon-star-blue-empty {
+	background-image: url('/resources/unicon/unicon-star-blue-empty.svg');
+}
+
+i.unicon-rhombus-blue-fill {
+	background-image: url('/resources/unicon/unicon-rhombus-blue-fill.svg');
+}
+
+i.unicon-rhombus-blue-empty {
+	background-image: url('/resources/unicon/unicon-rhombus-blue-empty.svg');
+}
+
+i.unicon-heart-blue-fill {
+	background-image: url('/resources/unicon/unicon-heart-blue-fill.svg');
+}
+
+i.unicon-heart-blue-empty {
+	background-image: url('/resources/unicon/unicon-heart-blue-empty.svg');
+}
+
+i.unicon-circle-indigo-fill {
+	background-image: url('/resources/unicon/unicon-circle-indigo-fill.svg');
+}
+
+i.unicon-circle-indigo-empty {
+	background-image:
+		url('/resources/unicon/unicon-circle-indigo-empty.svg');
+}
+
+i.unicon-square-indigo-fill {
+	background-image: url('/resources/unicon/unicon-square-indigo-fill.svg');
+}
+
+i.unicon-square-indigo-empty {
+	background-image:
+		url('/resources/unicon/unicon-square-indigo-empty.svg');
+}
+
+i.unicon-triangle-indigo-fill {
+	background-image:
+		url('/resources/unicon/unicon-triangle-indigo-fill.svg');
+}
+
+i.unicon-triangle-indigo-empty {
+	background-image:
+		url('/resources/unicon/unicon-triangle-indigo-empty.svg');
+}
+
+i.unicon-rvstriangle-indigo-fill {
+	background-image:
+		url('/resources/unicon/unicon-rvstriangle-indigo-fill.svg');
+}
+
+i.unicon-rvstriangle-indigo-empty {
+	background-image:
+		url('/resources/unicon/unicon-rvstriangle-indigo-empty.svg');
+}
+
+i.unicon-star-indigo-fill {
+	background-image: url('/resources/unicon/unicon-star-indigo-fill.svg');
+}
+
+i.unicon-star-indigo-empty {
+	background-image: url('/resources/unicon/unicon-star-indigo-empty.svg');
+}
+
+i.unicon-rhombus-indigo-fill {
+	background-image:
+		url('/resources/unicon/unicon-rhombus-indigo-fill.svg');
+}
+
+i.unicon-rhombus-indigo-empty {
+	background-image:
+		url('/resources/unicon/unicon-rhombus-indigo-empty.svg');
+}
+
+i.unicon-heart-indigo-fill {
+	background-image: url('/resources/unicon/unicon-heart-indigo-fill.svg');
+}
+
+i.unicon-heart-indigo-empty {
+	background-image: url('/resources/unicon/unicon-heart-indigo-empty.svg');
+}
+
+i.unicon-circle-purple-fill {
+	background-image: url('/resources/unicon/unicon-circle-purple-fill.svg');
+}
+
+i.unicon-circle-purple-empty {
+	background-image:
+		url('/resources/unicon/unicon-circle-purple-empty.svg');
+}
+
+i.unicon-square-purple-fill {
+	background-image: url('/resources/unicon/unicon-square-purple-fill.svg');
+}
+
+i.unicon-square-purple-empty {
+	background-image:
+		url('/resources/unicon/unicon-square-purple-empty.svg');
+}
+
+i.unicon-triangle-purple-fill {
+	background-image:
+		url('/resources/unicon/unicon-triangle-purple-fill.svg');
+}
+
+i.unicon-triangle-purple-empty {
+	background-image:
+		url('/resources/unicon/unicon-triangle-purple-empty.svg');
+}
+
+i.unicon-rvstriangle-purple-fill {
+	background-image:
+		url('/resources/unicon/unicon-rvstriangle-purple-fill.svg');
+}
+
+i.unicon-rvstriangle-purple-empty {
+	background-image:
+		url('/resources/unicon/unicon-rvstriangle-purple-empty.svg');
+}
+
+i.unicon-star-purple-fill {
+	background-image: url('/resources/unicon/unicon-star-purple-fill.svg');
+}
+
+i.unicon-star-purple-empty {
+	background-image: url('/resources/unicon/unicon-star-purple-empty.svg');
+}
+
+i.unicon-rhombus-purple-fill {
+	background-image:
+		url('/resources/unicon/unicon-rhombus-purple-fill.svg');
+}
+
+i.unicon-rhombus-purple-empty {
+	background-image:
+		url('/resources/unicon/unicon-rhombus-purple-empty.svg');
+}
+
+i.unicon-heart-purple-fill {
+	background-image: url('/resources/unicon/unicon-heart-purple-fill.svg');
+}
+
+i.unicon-heart-purple-empty {
+	background-image: url('/resources/unicon/unicon-heart-purple-empty.svg');
+}
+
+i.unicon-circle-pink-fill {
+	background-image: url('/resources/unicon/unicon-circle-pink-fill.svg');
+}
+
+i.unicon-circle-pink-empty {
+	background-image: url('/resources/unicon/unicon-circle-pink-empty.svg');
+}
+
+i.unicon-square-pink-fill {
+	background-image: url('/resources/unicon/unicon-square-pink-fill.svg');
+}
+
+i.unicon-square-pink-empty {
+	background-image: url('/resources/unicon/unicon-square-pink-empty.svg');
+}
+
+i.unicon-triangle-pink-fill {
+	background-image: url('/resources/unicon/unicon-triangle-pink-fill.svg');
+}
+
+i.unicon-triangle-pink-empty {
+	background-image:
+		url('/resources/unicon/unicon-triangle-pink-empty.svg');
+}
+
+i.unicon-rvstriangle-pink-fill {
+	background-image:
+		url('/resources/unicon/unicon-rvstriangle-pink-fill.svg');
+}
+
+i.unicon-rvstriangle-pink-empty {
+	background-image:
+		url('/resources/unicon/unicon-rvstriangle-pink-empty.svg');
+}
+
+i.unicon-star-pink-fill {
+	background-image: url('/resources/unicon/unicon-star-pink-fill.svg');
+}
+
+i.unicon-star-pink-empty {
+	background-image: url('/resources/unicon/unicon-star-pink-empty.svg');
+}
+
+i.unicon-rhombus-pink-fill {
+	background-image: url('/resources/unicon/unicon-rhombus-pink-fill.svg');
+}
+
+i.unicon-rhombus-pink-empty {
+	background-image: url('/resources/unicon/unicon-rhombus-pink-empty.svg');
+}
+
+i.unicon-heart-pink-fill {
+	background-image: url('/resources/unicon/unicon-heart-pink-fill.svg');
+}
+
+i.unicon-heart-pink-empty {
+	background-image: url('/resources/unicon/unicon-heart-pink-empty.svg');
+}
+
+i.unicon-circle-red-fill {
+	background-image: url('/resources/unicon/unicon-circle-red-fill.svg');
+}
+
+i.unicon-circle-red-empty {
+	background-image: url('/resources/unicon/unicon-circle-red-empty.svg');
+}
+
+i.unicon-square-red-fill {
+	background-image: url('/resources/unicon/unicon-square-red-fill.svg');
+}
+
+i.unicon-square-red-empty {
+	background-image: url('/resources/unicon/unicon-square-red-empty.svg');
+}
+
+i.unicon-triangle-red-fill {
+	background-image: url('/resources/unicon/unicon-triangle-red-fill.svg');
+}
+
+i.unicon-triangle-red-empty {
+	background-image: url('/resources/unicon/unicon-triangle-red-empty.svg');
+}
+
+i.unicon-rvstriangle-red-fill {
+	background-image:
+		url('/resources/unicon/unicon-rvstriangle-red-fill.svg');
+}
+
+i.unicon-rvstriangle-red-empty {
+	background-image:
+		url('/resources/unicon/unicon-rvstriangle-red-empty.svg');
+}
+
+i.unicon-star-red-fill {
+	background-image: url('/resources/unicon/unicon-star-red-fill.svg');
+}
+
+i.unicon-star-red-empty {
+	background-image: url('/resources/unicon/unicon-star-red-empty.svg');
+}
+
+i.unicon-rhombus-red-fill {
+	background-image: url('/resources/unicon/unicon-rhombus-red-fill.svg');
+}
+
+i.unicon-rhombus-red-empty {
+	background-image: url('/resources/unicon/unicon-rhombus-red-empty.svg');
+}
+
+i.unicon-heart-red-fill {
+	background-image: url('/resources/unicon/unicon-heart-red-fill.svg');
+}
+
+i.unicon-heart-red-empty {
+	background-image: url('/resources/unicon/unicon-heart-red-empty.svg');
+}
+
+i.unicon-circle-orange-fill {
+	background-image: url('/resources/unicon/unicon-circle-orange-fill.svg');
+}
+
+i.unicon-circle-orange-empty {
+	background-image:
+		url('/resources/unicon/unicon-circle-orange-empty.svg');
+}
+
+i.unicon-square-orange-fill {
+	background-image: url('/resources/unicon/unicon-square-orange-fill.svg');
+}
+
+i.unicon-square-orange-empty {
+	background-image:
+		url('/resources/unicon/unicon-square-orange-empty.svg');
+}
+
+i.unicon-triangle-orange-fill {
+	background-image:
+		url('/resources/unicon/unicon-triangle-orange-fill.svg');
+}
+
+i.unicon-triangle-orange-empty {
+	background-image:
+		url('/resources/unicon/unicon-triangle-orange-empty.svg');
+}
+
+i.unicon-rvstriangle-orange-fill {
+	background-image:
+		url('/resources/unicon/unicon-rvstriangle-orange-fill.svg');
+}
+
+i.unicon-rvstriangle-orange-empty {
+	background-image:
+		url('/resources/unicon/unicon-rvstriangle-orange-empty.svg');
+}
+
+i.unicon-star-orange-fill {
+	background-image: url('/resources/unicon/unicon-star-orange-fill.svg');
+}
+
+i.unicon-star-orange-empty {
+	background-image: url('/resources/unicon/unicon-star-orange-empty.svg');
+}
+
+i.unicon-rhombus-orange-fill {
+	background-image:
+		url('/resources/unicon/unicon-rhombus-orange-fill.svg');
+}
+
+i.unicon-rhombus-orange-empty {
+	background-image:
+		url('/resources/unicon/unicon-rhombus-orange-empty.svg');
+}
+
+i.unicon-heart-orange-fill {
+	background-image: url('/resources/unicon/unicon-heart-orange-fill.svg');
+}
+
+i.unicon-heart-orange-empty {
+	background-image: url('/resources/unicon/unicon-heart-orange-empty.svg');
+}
+
+i.unicon-circle-yellow-fill {
+	background-image: url('/resources/unicon/unicon-circle-yellow-fill.svg');
+}
+
+i.unicon-circle-yellow-empty {
+	background-image:
+		url('/resources/unicon/unicon-circle-yellow-empty.svg');
+}
+
+i.unicon-square-yellow-fill {
+	background-image: url('/resources/unicon/unicon-square-yellow-fill.svg');
+}
+
+i.unicon-square-yellow-empty {
+	background-image:
+		url('/resources/unicon/unicon-square-yellow-empty.svg');
+}
+
+i.unicon-triangle-yellow-fill {
+	background-image:
+		url('/resources/unicon/unicon-triangle-yellow-fill.svg');
+}
+
+i.unicon-triangle-yellow-empty {
+	background-image:
+		url('/resources/unicon/unicon-triangle-yellow-empty.svg');
+}
+
+i.unicon-rvstriangle-yellow-fill {
+	background-image:
+		url('/resources/unicon/unicon-rvstriangle-yellow-fill.svg');
+}
+
+i.unicon-rvstriangle-yellow-empty {
+	background-image:
+		url('/resources/unicon/unicon-rvstriangle-yellow-empty.svg');
+}
+
+i.unicon-star-yellow-fill {
+	background-image: url('/resources/unicon/unicon-star-yellow-fill.svg');
+}
+
+i.unicon-star-yellow-empty {
+	background-image: url('/resources/unicon/unicon-star-yellow-empty.svg');
+}
+
+i.unicon-rhombus-yellow-fill {
+	background-image:
+		url('/resources/unicon/unicon-rhombus-yellow-fill.svg');
+}
+
+i.unicon-rhombus-yellow-empty {
+	background-image:
+		url('/resources/unicon/unicon-rhombus-yellow-empty.svg');
+}
+
+i.unicon-heart-yellow-fill {
+	background-image: url('/resources/unicon/unicon-heart-yellow-fill.svg');
+}
+
+i.unicon-heart-yellow-empty {
+	background-image: url('/resources/unicon/unicon-heart-yellow-empty.svg');
+}
+
+i.unicon-circle-green-fill {
+	background-image: url('/resources/unicon/unicon-circle-green-fill.svg');
+}
+
+i.unicon-circle-green-empty {
+	background-image: url('/resources/unicon/unicon-circle-green-empty.svg');
+}
+
+i.unicon-square-green-fill {
+	background-image: url('/resources/unicon/unicon-square-green-fill.svg');
+}
+
+i.unicon-square-green-empty {
+	background-image: url('/resources/unicon/unicon-square-green-empty.svg');
+}
+
+i.unicon-triangle-green-fill {
+	background-image:
+		url('/resources/unicon/unicon-triangle-green-fill.svg');
+}
+
+i.unicon-triangle-green-empty {
+	background-image:
+		url('/resources/unicon/unicon-triangle-green-empty.svg');
+}
+
+i.unicon-rvstriangle-green-fill {
+	background-image:
+		url('/resources/unicon/unicon-rvstriangle-green-fill.svg');
+}
+
+i.unicon-rvstriangle-green-empty {
+	background-image:
+		url('/resources/unicon/unicon-rvstriangle-green-empty.svg');
+}
+
+i.unicon-star-green-fill {
+	background-image: url('/resources/unicon/unicon-star-green-fill.svg');
+}
+
+i.unicon-star-green-empty {
+	background-image: url('/resources/unicon/unicon-star-green-empty.svg');
+}
+
+i.unicon-rhombus-green-fill {
+	background-image: url('/resources/unicon/unicon-rhombus-green-fill.svg');
+}
+
+i.unicon-rhombus-green-empty {
+	background-image:
+		url('/resources/unicon/unicon-rhombus-green-empty.svg');
+}
+
+i.unicon-heart-green-fill {
+	background-image: url('/resources/unicon/unicon-heart-green-fill.svg');
+}
+
+i.unicon-heart-green-empty {
+	background-image: url('/resources/unicon/unicon-heart-green-empty.svg');
+}
+
+i.unicon-circle-teal-fill {
+	background-image: url('/resources/unicon/unicon-circle-teal-fill.svg');
+}
+
+i.unicon-circle-teal-empty {
+	background-image: url('/resources/unicon/unicon-circle-teal-empty.svg');
+}
+
+i.unicon-square-teal-fill {
+	background-image: url('/resources/unicon/unicon-square-teal-fill.svg');
+}
+
+i.unicon-square-teal-empty {
+	background-image: url('/resources/unicon/unicon-square-teal-empty.svg');
+}
+
+i.unicon-triangle-teal-fill {
+	background-image: url('/resources/unicon/unicon-triangle-teal-fill.svg');
+}
+
+i.unicon-triangle-teal-empty {
+	background-image:
+		url('/resources/unicon/unicon-triangle-teal-empty.svg');
+}
+
+i.unicon-rvstriangle-teal-fill {
+	background-image:
+		url('/resources/unicon/unicon-rvstriangle-teal-fill.svg');
+}
+
+i.unicon-rvstriangle-teal-empty {
+	background-image:
+		url('/resources/unicon/unicon-rvstriangle-teal-empty.svg');
+}
+
+i.unicon-star-teal-fill {
+	background-image: url('/resources/unicon/unicon-star-teal-fill.svg');
+}
+
+i.unicon-star-teal-empty {
+	background-image: url('/resources/unicon/unicon-star-teal-empty.svg');
+}
+
+i.unicon-rhombus-teal-fill {
+	background-image: url('/resources/unicon/unicon-rhombus-teal-fill.svg');
+}
+
+i.unicon-rhombus-teal-empty {
+	background-image: url('/resources/unicon/unicon-rhombus-teal-empty.svg');
+}
+
+i.unicon-heart-teal-fill {
+	background-image: url('/resources/unicon/unicon-heart-teal-fill.svg');
+}
+
+i.unicon-heart-teal-empty {
+	background-image: url('/resources/unicon/unicon-heart-teal-empty.svg');
+}
+
+i.unicon-circle-cyan-fill {
+	background-image: url('/resources/unicon/unicon-circle-cyan-fill.svg');
+}
+
+i.unicon-circle-cyan-empty {
+	background-image: url('/resources/unicon/unicon-circle-cyan-empty.svg');
+}
+
+i.unicon-square-cyan-fill {
+	background-image: url('/resources/unicon/unicon-square-cyan-fill.svg');
+}
+
+i.unicon-square-cyan-empty {
+	background-image: url('/resources/unicon/unicon-square-cyan-empty.svg');
+}
+
+i.unicon-triangle-cyan-fill {
+	background-image: url('/resources/unicon/unicon-triangle-cyan-fill.svg');
+}
+
+i.unicon-triangle-cyan-empty {
+	background-image:
+		url('/resources/unicon/unicon-triangle-cyan-empty.svg');
+}
+
+i.unicon-rvstriangle-cyan-fill {
+	background-image:
+		url('/resources/unicon/unicon-rvstriangle-cyan-fill.svg');
+}
+
+i.unicon-rvstriangle-cyan-empty {
+	background-image:
+		url('/resources/unicon/unicon-rvstriangle-cyan-empty.svg');
+}
+
+i.unicon-star-cyan-fill {
+	background-image: url('/resources/unicon/unicon-star-cyan-fill.svg');
+}
+
+i.unicon-star-cyan-empty {
+	background-image: url('/resources/unicon/unicon-star-cyan-empty.svg');
+}
+
+i.unicon-rhombus-cyan-fill {
+	background-image: url('/resources/unicon/unicon-rhombus-cyan-fill.svg');
+}
+
+i.unicon-rhombus-cyan-empty {
+	background-image: url('/resources/unicon/unicon-rhombus-cyan-empty.svg');
+}
+
+i.unicon-heart-cyan-fill {
+	background-image: url('/resources/unicon/unicon-heart-cyan-fill.svg');
+}
+
+i.unicon-heart-cyan-empty {
+	background-image: url('/resources/unicon/unicon-heart-cyan-empty.svg');
+}
+
+i.unicon-circle-white-fill {
+	background-image: url('/resources/unicon/unicon-circle-white-fill.svg');
+}
+
+i.unicon-circle-white-empty {
+	background-image: url('/resources/unicon/unicon-circle-white-empty.svg');
+}
+
+i.unicon-square-white-fill {
+	background-image: url('/resources/unicon/unicon-square-white-fill.svg');
+}
+
+i.unicon-square-white-empty {
+	background-image: url('/resources/unicon/unicon-square-white-empty.svg');
+}
+
+i.unicon-triangle-white-fill {
+	background-image:
+		url('/resources/unicon/unicon-triangle-white-fill.svg');
+}
+
+i.unicon-triangle-white-empty {
+	background-image:
+		url('/resources/unicon/unicon-triangle-white-empty.svg');
+}
+
+i.unicon-rvstriangle-white-fill {
+	background-image:
+		url('/resources/unicon/unicon-rvstriangle-white-fill.svg');
+}
+
+i.unicon-rvstriangle-white-empty {
+	background-image:
+		url('/resources/unicon/unicon-rvstriangle-white-empty.svg');
+}
+
+i.unicon-star-white-fill {
+	background-image: url('/resources/unicon/unicon-star-white-fill.svg');
+}
+
+i.unicon-star-white-empty {
+	background-image: url('/resources/unicon/unicon-star-white-empty.svg');
+}
+
+i.unicon-rhombus-white-fill {
+	background-image: url('/resources/unicon/unicon-rhombus-white-fill.svg');
+}
+
+i.unicon-rhombus-white-empty {
+	background-image:
+		url('/resources/unicon/unicon-rhombus-white-empty.svg');
+}
+
+i.unicon-heart-white-fill {
+	background-image: url('/resources/unicon/unicon-heart-white-fill.svg');
+}
+
+i.unicon-heart-white-empty {
+	background-image: url('/resources/unicon/unicon-heart-white-empty.svg');
+}
+
+i.unicon-circle-gray-fill {
+	background-image: url('/resources/unicon/unicon-circle-gray-fill.svg');
+}
+
+i.unicon-circle-gray-empty {
+	background-image: url('/resources/unicon/unicon-circle-gray-empty.svg');
+}
+
+i.unicon-square-gray-fill {
+	background-image: url('/resources/unicon/unicon-square-gray-fill.svg');
+}
+
+i.unicon-square-gray-empty {
+	background-image: url('/resources/unicon/unicon-square-gray-empty.svg');
+}
+
+i.unicon-triangle-gray-fill {
+	background-image: url('/resources/unicon/unicon-triangle-gray-fill.svg');
+}
+
+i.unicon-triangle-gray-empty {
+	background-image:
+		url('/resources/unicon/unicon-triangle-gray-empty.svg');
+}
+
+i.unicon-rvstriangle-gray-fill {
+	background-image:
+		url('/resources/unicon/unicon-rvstriangle-gray-fill.svg');
+}
+
+i.unicon-rvstriangle-gray-empty {
+	background-image:
+		url('/resources/unicon/unicon-rvstriangle-gray-empty.svg');
+}
+
+i.unicon-star-gray-fill {
+	background-image: url('/resources/unicon/unicon-star-gray-fill.svg');
+}
+
+i.unicon-star-gray-empty {
+	background-image: url('/resources/unicon/unicon-star-gray-empty.svg');
+}
+
+i.unicon-rhombus-gray-fill {
+	background-image: url('/resources/unicon/unicon-rhombus-gray-fill.svg');
+}
+
+i.unicon-rhombus-gray-empty {
+	background-image: url('/resources/unicon/unicon-rhombus-gray-empty.svg');
+}
+
+i.unicon-heart-gray-fill {
+	background-image: url('/resources/unicon/unicon-heart-gray-fill.svg');
+}
+
+i.unicon-heart-gray-empty {
+	background-image: url('/resources/unicon/unicon-heart-gray-empty.svg');
+}
+
+i.unicon-circle-graydark-fill {
+	background-image:
+		url('/resources/unicon/unicon-circle-graydark-fill.svg');
+}
+
+i.unicon-circle-graydark-empty {
+	background-image:
+		url('/resources/unicon/unicon-circle-graydark-empty.svg');
+}
+
+i.unicon-square-graydark-fill {
+	background-image:
+		url('/resources/unicon/unicon-square-graydark-fill.svg');
+}
+
+i.unicon-square-graydark-empty {
+	background-image:
+		url('/resources/unicon/unicon-square-graydark-empty.svg');
+}
+
+i.unicon-triangle-graydark-fill {
+	background-image:
+		url('/resources/unicon/unicon-triangle-graydark-fill.svg');
+}
+
+i.unicon-triangle-graydark-empty {
+	background-image:
+		url('/resources/unicon/unicon-triangle-graydark-empty.svg');
+}
+
+i.unicon-rvstriangle-graydark-fill {
+	background-image:
+		url('/resources/unicon/unicon-rvstriangle-graydark-fill.svg');
+}
+
+i.unicon-rvstriangle-graydark-empty {
+	background-image:
+		url('/resources/unicon/unicon-rvstriangle-graydark-empty.svg');
+}
+
+i.unicon-star-graydark-fill {
+	background-image: url('/resources/unicon/unicon-star-graydark-fill.svg');
+}
+
+i.unicon-star-graydark-empty {
+	background-image:
+		url('/resources/unicon/unicon-star-graydark-empty.svg');
+}
+
+i.unicon-rhombus-graydark-fill {
+	background-image:
+		url('/resources/unicon/unicon-rhombus-graydark-fill.svg');
+}
+
+i.unicon-rhombus-graydark-empty {
+	background-image:
+		url('/resources/unicon/unicon-rhombus-graydark-empty.svg');
+}
+
+i.unicon-heart-graydark-fill {
+	background-image:
+		url('/resources/unicon/unicon-heart-graydark-fill.svg');
+}
+
+i.unicon-heart-graydark-empty {
+	background-image:
+		url('/resources/unicon/unicon-heart-graydark-empty.svg');
+}
+
+i.unicon-circle-light-fill {
+	background-image: url('/resources/unicon/unicon-circle-light-fill.svg');
+}
+
+i.unicon-circle-light-empty {
+	background-image: url('/resources/unicon/unicon-circle-light-empty.svg');
+}
+
+i.unicon-square-light-fill {
+	background-image: url('/resources/unicon/unicon-square-light-fill.svg');
+}
+
+i.unicon-square-light-empty {
+	background-image: url('/resources/unicon/unicon-square-light-empty.svg');
+}
+
+i.unicon-triangle-light-fill {
+	background-image:
+		url('/resources/unicon/unicon-triangle-light-fill.svg');
+}
+
+i.unicon-triangle-light-empty {
+	background-image:
+		url('/resources/unicon/unicon-triangle-light-empty.svg');
+}
+
+i.unicon-rvstriangle-light-fill {
+	background-image:
+		url('/resources/unicon/unicon-rvstriangle-light-fill.svg');
+}
+
+i.unicon-rvstriangle-light-empty {
+	background-image:
+		url('/resources/unicon/unicon-rvstriangle-light-empty.svg');
+}
+
+i.unicon-star-light-fill {
+	background-image: url('/resources/unicon/unicon-star-light-fill.svg');
+}
+
+i.unicon-star-light-empty {
+	background-image: url('/resources/unicon/unicon-star-light-empty.svg');
+}
+
+i.unicon-rhombus-light-fill {
+	background-image: url('/resources/unicon/unicon-rhombus-light-fill.svg');
+}
+
+i.unicon-rhombus-light-empty {
+	background-image:
+		url('/resources/unicon/unicon-rhombus-light-empty.svg');
+}
+
+i.unicon-heart-light-fill {
+	background-image: url('/resources/unicon/unicon-heart-light-fill.svg');
+}
+
+i.unicon-heart-light-empty {
+	background-image: url('/resources/unicon/unicon-heart-light-empty.svg');
+}
+
+i.unicon-circle-dark-fill {
+	background-image: url('/resources/unicon/unicon-circle-dark-fill.svg');
+}
+
+i.unicon-circle-dark-empty {
+	background-image: url('/resources/unicon/unicon-circle-dark-empty.svg');
+}
+
+i.unicon-square-dark-fill {
+	background-image: url('/resources/unicon/unicon-square-dark-fill.svg');
+}
+
+i.unicon-square-dark-empty {
+	background-image: url('/resources/unicon/unicon-square-dark-empty.svg');
+}
+
+i.unicon-triangle-dark-fill {
+	background-image: url('/resources/unicon/unicon-triangle-dark-fill.svg');
+}
+
+i.unicon-triangle-dark-empty {
+	background-image:
+		url('/resources/unicon/unicon-triangle-dark-empty.svg');
+}
+
+i.unicon-rvstriangle-dark-fill {
+	background-image:
+		url('/resources/unicon/unicon-rvstriangle-dark-fill.svg');
+}
+
+i.unicon-rvstriangle-dark-empty {
+	background-image:
+		url('/resources/unicon/unicon-rvstriangle-dark-empty.svg');
+}
+
+i.unicon-star-dark-fill {
+	background-image: url('/resources/unicon/unicon-star-dark-fill.svg');
+}
+
+i.unicon-star-dark-empty {
+	background-image: url('/resources/unicon/unicon-star-dark-empty.svg');
+}
+
+i.unicon-rhombus-dark-fill {
+	background-image: url('/resources/unicon/unicon-rhombus-dark-fill.svg');
+}
+
+i.unicon-rhombus-dark-empty {
+	background-image: url('/resources/unicon/unicon-rhombus-dark-empty.svg');
+}
+
+i.unicon-heart-dark-fill {
+	background-image: url('/resources/unicon/unicon-heart-dark-fill.svg');
+}
+
+i.unicon-heart-dark-empty {
+	background-image: url('/resources/unicon/unicon-heart-dark-empty.svg');
+}
+
+i.unicon-line-blue-fill {
+	background-image: url('/resources/unicon/unicon-line-blue-fill.svg');
+}
+
+i.unicon-line-indigo-fill {
+	background-image: url('/resources/unicon/unicon-line-indigo-fill.svg');
+}
+
+i.unicon-line-purple-fill {
+	background-image: url('/resources/unicon/unicon-line-purple-fill.svg');
+}
+
+i.unicon-line-pink-fill {
+	background-image: url('/resources/unicon/unicon-line-pink-fill.svg');
+}
+
+i.unicon-line-red-fill {
+	background-image: url('/resources/unicon/unicon-line-red-fill.svg');
+}
+
+i.unicon-line-orange-fill {
+	background-image: url('/resources/unicon/unicon-line-orange-fill.svg');
+}
+
+i.unicon-line-yellow-fill {
+	background-image: url('/resources/unicon/unicon-line-yellow-fill.svg');
+}
+
+i.unicon-line-green-fill {
+	background-image: url('/resources/unicon/unicon-line-green-fill.svg');
+}
+
+i.unicon-line-teal-fill {
+	background-image: url('/resources/unicon/unicon-line-teal-fill.svg');
+}
+
+i.unicon-line-cyan-fill {
+	background-image: url('/resources/unicon/unicon-line-cyan-fill.svg');
+}
+
+i.unicon-line-white-fill {
+	background-image: url('/resources/unicon/unicon-line-white-fill.svg');
+}
+
+i.unicon-line-gray-fill {
+	background-image: url('/resources/unicon/unicon-line-gray-fill.svg');
+}
+
+i.unicon-line-graydark-fill {
+	background-image: url('/resources/unicon/unicon-line-graydark-fill.svg');
+}
+
+i.unicon-line-light-fill {
+	background-image: url('/resources/unicon/unicon-line-light-fill.svg');
+}
+
+i.unicon-line-dark-fill {
+	background-image: url('/resources/unicon/unicon-line-dark-fill.svg');
+}

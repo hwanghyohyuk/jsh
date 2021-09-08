@@ -1,0 +1,19 @@
+.chosenIcon-container .chosen-single span {
+	padding-left: 17px;
+}
+
+.chosenIcon-container .chosen-single span:before, .chosenIcon-container .chosen-results li:before
+	{
+	position: absolute;
+	width: 12px;
+	height: 12px;
+	margin-top: 9px;
+	margin-left: -20px;
+	border-radius: 20px;
+	content: "";
+}
+
+.chosenIcon-container .chosen-results li {
+	line-height: 30px;
+	padding-left: 30px;
+}

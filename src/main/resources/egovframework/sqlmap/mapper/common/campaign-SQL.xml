@@ -1,0 +1,1420 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="campaign">
+
+	<select id="selectCampaignList" parameterType="EgovMap" resultType="EgovMap">
+		SELECT NO, C_CTXT, C_TIT, C_ADVR, S_DT, E_DT, C_DT, M_DT, C_BDGT_LMT, C_BDGT_RSLT, C_PRGS_STTS, TOTAL_OTS, TARGET_OTS, CNT, 
+			CASE WHEN MAP_IMAGE_PATH IS NULL THEN '/resources/images/cardimg.png'
+			ELSE MAP_IMAGE_PATH END AS MAP_IMAGE_PATH, IS_NW
+		FROM(
+			SELECT 
+				TO_CHAR((ROW_NUMBER() OVER(ORDER BY C_PRGS_STTS ASC, C_DT DESC)),'FM000000000') AS NO,
+				C_CTXT,
+				C_TIT,	
+				C_ADVR,
+				TO_CHAR(S_DT, 'YY.MM.DD') AS S_DT,
+				TO_CHAR(E_DT, 'YY.MM.DD') AS E_DT,
+				TO_CHAR(C_DT, 'YY.MM.DD') AS C_DT,
+				TO_CHAR(M_DT, 'YY.MM.DD') AS M_DT,
+				C_BDGT_LMT,
+				C_BDGT_RSLT,	
+				C_PRGS_STTS,
+				TOTAL_OTS,
+				TARGET_OTS,
+				(SELECT COUNT(*) FROM CAMPAIGN_MEDIA A WHERE A.C_NO = CAMPAIGN.C_NO AND IS_MEDIA = 'media') AS CNT,
+				(SELECT '/data/upload/mapPDF/'||FILE_SVR_NAME FROM CAMPAIGN_MAP A WHERE A.C_CTXT = CAMPAIGN.C_CTXT ORDER BY CAMPAIGN_MAP_NO DESC LIMIT 1) AS MAP_IMAGE_PATH,
+				IS_NW
+			FROM
+				CAMPAIGN
+				WHERE C_WRTR = (SELECT ID FROM A_01_INFO WHERE U_ID = #{uid})
+		)X
+	</select>
+	
+	<select id="selectCampaignListForAjax" parameterType="EgovMap" resultType="EgovMap">
+		SELECT 
+		CASE WHEN 
+			<choose>
+				<when test="order.equals('creating')">
+				C_PRGS_STTS IN ('1') THEN TO_CHAR(1,'FM000000000')
+				</when>
+				<when test="order.equals('booking')">
+				C_PRGS_STTS IN ('2','3','4','5') THEN TO_CHAR(2,'FM000000000')
+				</when>
+				<when test="order.equals('progressing')">
+				C_PRGS_STTS IN ('6') THEN TO_CHAR(3,'FM000000000')
+				</when>
+				<when test="order.equals('finished')">
+				C_PRGS_STTS IN ('7') THEN TO_CHAR(4,'FM000000000')
+				</when>
+				<otherwise>
+				C_PRGS_STTS IS NULL THEN TO_CHAR(0,'FM000000000')
+				</otherwise>
+			</choose>
+		ELSE TO_CHAR(C_PRGS_STTS::NUMERIC,'FM100000000')
+		END AS NO,
+			C_CTXT,
+			C_TIT,	
+			C_ADVR,
+			TO_CHAR(S_DT, 'YY.MM.DD') AS S_DT,
+			TO_CHAR(E_DT, 'YY.MM.DD') AS E_DT,
+			TO_CHAR(C_DT, 'YY.MM.DD') AS C_DT,
+			TO_CHAR(M_DT, 'YY.MM.DD') AS M_DT,
+			C_BDGT_LMT,
+			C_BDGT_RSLT,	
+			C_PRGS_STTS,
+			TOTAL_OTS,
+			TARGET_OTS,
+			(SELECT COUNT(*) FROM CAMPAIGN_MEDIA A WHERE A.C_NO = CAMPAIGN.C_NO AND IS_MEDIA = 'media') AS CNT,
+			IS_NW
+		FROM
+			CAMPAIGN
+		WHERE C_WRTR = (SELECT ID FROM A_01_INFO WHERE U_ID = #{uid})
+		ORDER BY C_PRGS_STTS ASC, C_DT DESC, IS_NW DESC
+	</select>
+	
+	<select id="selectCampaignStatus" parameterType="EgovMap" resultType="EgovMap">
+		WITH PRGS AS (
+			SELECT '1' AS C_PRGS_STTS, '1-creating' AS PRGS_STTS
+			UNION ALL
+			SELECT '2' AS C_PRGS_STTS, '2-booking' AS PRGS_STTS
+			UNION ALL
+			SELECT '3' AS C_PRGS_STTS, '2-booking' AS PRGS_STTS
+			UNION ALL
+			SELECT '4' AS C_PRGS_STTS, '2-booking' AS PRGS_STTS
+			UNION ALL
+			SELECT '5' AS C_PRGS_STTS, '2-booking' AS PRGS_STTS
+			UNION ALL
+			SELECT '6' AS C_PRGS_STTS, '3-progressing' AS PRGS_STTS
+			UNION ALL
+			SELECT '7' AS C_PRGS_STTS, '4-finished' AS PRGS_STTS
+		),
+		STEP_1 AS (
+			SELECT 
+			A.PRGS_STTS
+			,(SELECT COUNT(C_PRGS_STTS) FROM CAMPAIGN B WHERE B.C_PRGS_STTS = A.C_PRGS_STTS AND B.C_WRTR = (SELECT ID FROM A_01_INFO WHERE U_ID = #{uid})) AS CNT
+			,(SELECT COUNT(CASE WHEN B.IS_NW = 'Y' THEN 1 END) FROM CAMPAIGN B WHERE B.C_PRGS_STTS = A.C_PRGS_STTS AND B.C_WRTR = (SELECT ID FROM A_01_INFO WHERE U_ID = #{uid})) AS IS_NW
+			FROM PRGS A
+		)
+		SELECT PRGS_STTS, SUM(CNT) AS CNT, SUM(IS_NW) AS IS_NW FROM STEP_1 
+		GROUP BY PRGS_STTS
+		ORDER BY PRGS_STTS ASC
+	</select>
+	
+	<select id="selectMediaType" resultType="EgovMap">
+		<![CDATA[
+			SELECT 
+				DISTINCT
+				DVSN_1_NO,
+				DVSN_1_NM
+			FROM
+				BASE_TYPE
+			WHERE
+				IS_MEDIA = 'media'
+			ORDER BY DVSN_1_NO ASC
+		]]>
+	</select>
+	
+	<select id="selectMediaDvsn" resultType="EgovMap">
+		<![CDATA[
+			SELECT 
+				DVSN_1_NO,
+				DVSN_2_NO,
+				DVSN_2_NM
+			FROM
+				BASE_TYPE
+			WHERE
+				IS_MEDIA = 'media'
+			ORDER BY DVSN_1_NO ASC, DVSN_2_NO ASC
+		]]>
+	</select>
+	
+	<select id="selectfacilityType" resultType="EgovMap">
+		<![CDATA[
+			SELECT 
+				DISTINCT
+				DVSN_1_NO,
+				DVSN_1_NM
+			FROM
+				BASE_TYPE
+			WHERE
+				IS_MEDIA = 'facility'
+			ORDER BY DVSN_1_NO ASC
+		]]>
+	</select>
+	
+	<select id="selectfacilityDvsn" parameterType="EgovMap" resultType="EgovMap">
+		<![CDATA[
+			SELECT 
+				DVSN_2_NO, 
+				DVSN_2_NM 
+			FROM 
+				BASE_TYPE 
+			WHERE 
+				IS_MEDIA = 'facility'
+			AND
+				DVSN_1_NO = #{dvsnA}::integer 
+			ORDER BY DVSN_2_NO ASC
+		]]>
+	</select>
+	
+	<select id="selectMediaWhere" parameterType="EgovMap" resultType="EgovMap">
+		<![CDATA[
+			SELECT 
+				DVSN_2_NO, 
+				BASE
+			FROM
+				BASE_TYPE
+			WHERE IS_MEDIA = 'media' 
+			AND DVSN_1_NO = #{dvsnA}::integer
+			AND DVSN_2_NO = #{dvsnB}::integer
+		]]>
+	</select>
+	
+	<select id="selectMediaRating" parameterType="EgovMap" resultType="EgovMap">
+		<if test='base.equals("shelter")'>
+		SELECT AD_RATING_NO, AD_RATING FROM ${base} GROUP BY AD_RATING_NO, AD_RATING ORDER BY AD_RATING_NO ASC
+		</if>
+		<if test='base.equals("bus")'>
+		SELECT AD_RATING_NO, AD_RATING FROM ${base} GROUP BY AD_RATING_NO, AD_RATING ORDER BY AD_RATING_NO ASC
+		</if>
+	</select>
+	
+	<select id="selectMediaList" parameterType="EgovMap" resultType="EgovMap">
+		<if test='base.equals("shelter")'>
+			WITH ST1 AS ( 
+				SELECT SHELTER_ID, AD_RATING, AD_RATING_NO, SHELTER_NM, TYPE, GID FROM SHELTER 
+				WHERE DVSN_2_NO = #{dvsn2No}
+			 ),
+		    ST2 AS ( SELECT TYPE, GID, HP_ID FROM MEDIA_CONTAINS WHERE TYPE = 'shelter' AND GID IN ( SELECT GID FROM ST1 ) ),
+		    ST3 AS ( SELECT CC.TYPE, CC.GID, 
+		    TRUNC(SUM(TARGET / HP.ADM_CNT::NUMERIC / 2::NUMERIC + TARGET / HP.REG_CNT::NUMERIC / 2::NUMERIC)) AS TARGET_OTS,
+		    TRUNC(SUM(TOTAL / HP.ADM_CNT::NUMERIC / 2::NUMERIC + TOTAL / HP.REG_CNT::NUMERIC / 2::NUMERIC)) AS TOTAL_OTS
+		    FROM BASE_HEATPOINT HP 
+		    LEFT JOIN (SELECT REG_CD ,
+		   	<foreach collection="targetList" item="target" open="SUM(" separator="+" close=") AS TARGET">${target}</foreach>, SUM(TOT) AS TOTAL
+		    FROM BASE_DATA_TMP 
+		    <![CDATA[
+		    WHERE PDATE >= #{stdt} AND PDATE <= #{eddt} GROUP BY REG_CD) HD ON HP.REG_CD::TEXT = HD.REG_CD::TEXT
+		    ]]>
+		    JOIN ST2 CC ON HP.ID = CC.HP_ID
+		    GROUP BY CC.TYPE, CC.GID)
+		    SELECT ROW_NUMBER() OVER(ORDER BY AD_RATING_NO ASC, SHELTER_ID ASC, SHELTER_NM ASC) AS NO, A.SHELTER_ID, A.AD_RATING, A.AD_RATING_NO, A.SHELTER_NM, A.TYPE, SUM(B.TARGET_OTS) AS TARGET_OTS, SUM(B.TOTAL_OTS) AS TOTAL_OTS FROM ST1 A JOIN ST3 B ON A.TYPE = B.TYPE AND A.GID = B.GID
+		    GROUP BY A.SHELTER_ID, A.AD_RATING, A.AD_RATING_NO, A.SHELTER_NM, A.TYPE
+			ORDER BY NO ASC
+			LIMIT 100 OFFSET (${page} - 1) * 100
+		</if>
+	</select>
+	
+	<select id="selectMediapsdList" parameterType="EgovMap" resultType="EgovMap">
+		<if test='base.equals("psd")'>
+			WITH ASD AS ( SELECT LINE, METRO_CD, PSD_METRO, PSD_TYPE FROM PSD 
+				WHERE DVSN_2_NO = #{dvsn2No} 
+				GROUP BY LINE, METRO_CD, PSD_METRO, PSD_TYPE
+				ORDER BY METRO_CD 
+			),ST1 AS (
+				SELECT LINE_NUM, SUB_STA_NM, SUM(COALESCE(RIDE_PASGR_NUM,0)+COALESCE(ALIGHT_PASGR_NUM,0)) AS PASGR_NUM FROM CARD_SUBWAY_STATISTICS
+				<![CDATA[
+				WHERE USE_DT >= #{stdt} AND USE_DT <= #{eddt}
+				]]>
+				AND (LINE_NUM, SUB_STA_NM) IN (SELECT LINE, PSD_METRO FROM ASD)
+				GROUP BY LINE_NUM, SUB_STA_NM
+			),ST2 AS (
+				SELECT LINE_NUM, SUB_STA_NM, SUM(COALESCE(RIDE_PASGR_NUM,0)+COALESCE(ALIGHT_PASGR_NUM,0)) AS PASGR_NUM FROM CARD_SUBWAY_STATISTICS
+				<![CDATA[
+				WHERE SUBSTR(USE_DT,0,7) >= SUBSTR(#{stdt},0,7) AND SUBSTR(USE_DT,0,7) <= SUBSTR(#{eddt},0,7)
+				]]>
+				AND (LINE_NUM, SUB_STA_NM) IN (SELECT LINE, PSD_METRO FROM ASD)
+				GROUP BY LINE_NUM, SUB_STA_NM
+			),ST3 AS (
+				SELECT COUNT(USE_DT) AS CNT FROM(
+					SELECT USE_DT, COUNT(USE_DT) AS CNT FROM (
+						SELECT SUBSTR(USE_DT,0,7)AS USE_DT FROM CARD_SUBWAY_STATISTICS
+						<![CDATA[
+							WHERE USE_DT >= #{stdt} AND USE_DT <= #{eddt}
+						]]>
+						GROUP BY USE_DT
+						)USE_DT
+					GROUP BY USE_DT
+					)ASD
+			)
+			SELECT A.LINE, A.METRO_CD, A.PSD_METRO, 
+			ARRAY_TO_STRING(ARRAY_AGG(A.PSD_TYPE ORDER BY A.PSD_TYPE),',') AS PSD_TYPE,
+			SUM(B.PASGR_NUM) AS TOTAL_OTS, SUM(B.PASGR_NUM) AS TARGET_OTS,
+			TRUNC(SUM(C.PASGR_NUM)/(SELECT CNT FROM ST3)) AS AVG_INOUT_MONTH
+			FROM ASD A
+			LEFT OUTER JOIN ST1 B ON B.LINE_NUM = A.LINE AND B.SUB_STA_NM = A.PSD_METRO
+			LEFT OUTER JOIN ST2 C ON C.LINE_NUM = A.LINE AND C.SUB_STA_NM = A.PSD_METRO
+			GROUP BY A.LINE, A.METRO_CD, A.PSD_METRO
+			ORDER BY A.LINE ASC, A.METRO_CD ASC
+			LIMIT 100 OFFSET (${page} - 1) * 100
+		</if>
+	</select>
+	
+	<select id="selectMediaGdiaList" parameterType="EgovMap" resultType="EgovMap">
+		<if test='base.equals("gdia")'> 
+			SELECT A.LINE, A.AD_RATING, A.METRO_CD, A.STATION_NM, A.TYPE,
+			SUM(PASGR_NUM) AS TOTAL_OTS,
+			SUM(PASGR_NUM) AS TARGET_OTS
+			 FROM GDIA A
+			LEFT OUTER JOIN (
+			SELECT LINE_NUM, SUB_STA_NM, SUM(COALESCE(RIDE_PASGR_NUM,0)+COALESCE(ALIGHT_PASGR_NUM,0)) AS PASGR_NUM FROM CARD_SUBWAY_STATISTICS 
+			<![CDATA[
+			WHERE USE_DT >= #{stdt} AND USE_DT <= #{eddt}
+			]]>
+			GROUP BY LINE_NUM, SUB_STA_NM
+			)B ON B.LINE_NUM = A.LINE AND B.SUB_STA_NM = A.STATION_NM
+			WHERE DVSN_2_NO = #{dvsn2No}
+			GROUP BY A.LINE, A.AD_RATING, A.METRO_CD, A.STATION_NM, A.TYPE, PASGR_NUM
+			ORDER BY A.AD_RATING ASC, A.LINE ASC, A.STATION_NM
+			LIMIT 100 OFFSET (${page} - 1) * 100
+		</if>
+	</select>
+	
+	<select id="selectMediaBusList" parameterType="EgovMap" resultType="EgovMap">
+		<if test='base.equals("bus")'> 
+		WITH ST1 AS ( 
+		SELECT OPERATION_BUS, AD_RATING, AD_RATING_NO, ROUTE_NO, PRIMARY_ROUTE, AD_PRICE_MONTH, AD_MAKE_PRICE, TYPE, GID FROM BUS 
+		WHERE DVSN_2_NO = #{dvsn2No}
+		),
+		ST2 AS ( SELECT TYPE, GID, HP_ID FROM MEDIA_CONTAINS WHERE TYPE = 'bus' AND GID IN ( SELECT GID FROM ST1 ) ),
+		ST3 AS ( SELECT CC.TYPE, CC.GID, 
+		TRUNC(SUM(TARGET / HP.ADM_CNT::NUMERIC / 2::NUMERIC + TARGET / HP.REG_CNT::NUMERIC / 2::NUMERIC)) AS TARGET_OTS,
+		TRUNC(SUM(TOTAL / HP.ADM_CNT::NUMERIC / 2::NUMERIC + TOTAL / HP.REG_CNT::NUMERIC / 2::NUMERIC)) AS TOTAL_OTS
+		FROM BASE_HEATPOINT HP 
+		LEFT JOIN (SELECT REG_CD ,
+		<foreach collection="targetList" item="target" open="SUM(" separator="+" close=") AS TARGET">${target}</foreach>, SUM(TOT) AS TOTAL
+		FROM BASE_DATA_TMP 
+		<![CDATA[
+		WHERE PDATE >= #{stdt} AND PDATE <= #{eddt} GROUP BY REG_CD) HD ON HP.REG_CD::TEXT = HD.REG_CD::TEXT
+		]]>
+		JOIN ST2 CC ON HP.ID = CC.HP_ID
+		GROUP BY CC.TYPE, CC.GID)
+		SELECT ROW_NUMBER() OVER(ORDER BY AD_RATING_NO ASC, ROUTE_NO ASC) AS NO
+		, A.OPERATION_BUS, A.AD_RATING, A.AD_RATING_NO, A.ROUTE_NO, A.PRIMARY_ROUTE, A.AD_PRICE_MONTH, A.AD_MAKE_PRICE, A.TYPE, A.GID, B.TARGET_OTS,
+		 B.TOTAL_OTS FROM ST1 A JOIN ST3 B ON A.TYPE = B.TYPE AND A.GID = B.GID
+		ORDER BY NO ASC
+		LIMIT 100 OFFSET (${page} - 1) * 100
+		</if>
+	</select>
+	
+	<select id="selectMediaMediaboardList" parameterType="EgovMap" resultType="EgovMap">
+		<if test='base.equals("mediaboard")'> 
+		<![CDATA[
+			SELECT SUM(HALF_1_PANEL_CNT) AS HALF_1_PANEL, 
+				   SUM(HALF_2_PANEL_CNT) AS HALF_2_PANEL, 
+				   SUM(HALF_1_PANEL_CNT+HALF_2_PANEL_CNT) AS HALF_ALL_PANEL, 
+				   #{base} as base
+			FROM mediaboard
+			WHERE DVSN_2_NO = #{dvsn2No}
+			ORDER BY HALF_1_PANEL ASC, HALF_2_PANEL ASC ,HALF_ALL_PANEL ASC
+					LIMIT 100 OFFSET (${page} - 1) * 100
+		]]>
+		</if>
+	</select>
+	
+	<select id="selectMediaMediaboardPackageList" parameterType="EgovMap" resultType="EgovMap">
+		<if test='base.equals("mediaboard")'> 
+		<![CDATA[
+			select * from(
+						select '수도권 풀 패키지' as packagename
+	    						,   SUM(half_1_panel_cnt + half_2_panel_cnt) as panelname
+	     						,   '1,000,000'   as price FROM mediaboard WHERE city_nm='서울'
+						union 
+						select '수도권 하프 패키지-1' as packagename
+	    						,  SUM(half_1_panel_cnt)  as panelname
+	     						,   '1,000,000'   as price FROM mediaboard WHERE city_nm='서울'
+						union 
+						select '수도권 하프 패키지-2' as packagename
+	     						,  SUM(half_2_panel_cnt)  as panelname
+	     						,   '1,000,000'   as price FROM mediaboard WHERE city_nm='서울'
+						union 
+						select '수도권 - 오피스' as packagename
+	     						,  SUM(half_1_panel_cnt)  as panelname
+	     						,   '1,000,000'   as price  FROM mediaboard WHERE bd_type='오피스텔'
+							)a
+		]]>
+		</if>
+	</select>
+	
+	<select id="selectMediaTownboardList" parameterType="EgovMap" resultType="EgovMap">
+		<if test='base.equals("townboard")'> 
+		<![CDATA[
+			SELECT 
+				T.GID 
+				, T.SD_NM
+				, T.APT_NM
+				, T.HOUSEHOLDS_CNT
+				, T.PANEL_CNT
+				, T.AD_PRICE_MONTH_1::NUMERIC + T.AD_PRICE_MONTH_2::NUMERIC AS AD_PRICE_MONTH
+				, T.AD_PRICE_MONTH_1 
+				, T.AD_PRICE_MONTH_2
+				, T.PER_MONTH_1
+				, T.PER_MONTH_2
+				, TRUNC(T.HOUSEHOLDS_CNT * AVG_HOUSEHOLDS * WEIGHT * (TO_DATE(#{eddt},'YYYYMMDD') - TO_DATE(#{stdt},'YYYYMMDD'))) AS TARGET_OTS
+				, TRUNC(T.HOUSEHOLDS_CNT * AVG_HOUSEHOLDS * WEIGHT * (TO_DATE(#{eddt},'YYYYMMDD') - TO_DATE(#{stdt},'YYYYMMDD'))) AS TOTAL_OTS
+			FROM TOWNBOARD T
+			JOIN DISTRICT_SD D ON D.SHORT_NM = T.SD_NM
+			WHERE T.DVSN_2_NO = #{dvsn2No}
+			ORDER BY D.DISTRICT_CD ASC, T.GID ASC
+			LIMIT 100 OFFSET (${page} - 1) * 100
+		]]>
+		</if>
+	</select>
+	
+	<select id="selectMediaTownboardPackageList" parameterType="EgovMap" resultType="EgovMap">
+		<if test='base.equals("townboard")'> 
+		<![CDATA[
+			select * from(
+						select '전국 15초' as packagename
+	     						, SUM(panel_cnt)  as panelname
+	     						, SUM(CAST(per_month_1 AS NUMERIC))   as price FROM townboard
+						union 
+						select '전국 30초' as packagename
+	     						, SUM(panel_cnt)  as panelname
+	     						, SUM(CAST(per_month_2 AS NUMERIC))    as price FROM townboard
+						union 
+						select '서울+수도권15초' as packagename
+	     						, SUM(panel_cnt)  as panelname
+	     						, SUM(CAST(per_month_1 AS NUMERIC))    as price FROM townboard WHERE sd_nm='서울'
+						union 
+						select '서울+수도권30초' as packagename
+	     						,  SUM(panel_cnt)  as panelname
+	     						,  SUM(CAST(per_month_2 AS NUMERIC))    as price FROM townboard WHERE sd_nm='서울'
+							)a
+		]]>
+		</if>
+	</select>
+	
+	<select id="selectMediaEdisplayList" parameterType="EgovMap" resultType="EgovMap">
+		<if test='base.equals("e_display")'> 
+			WITH ST1 AS ( 
+			SELECT name, size,spec,operation_time,ad_price_month, TYPE, GID FROM e_display 
+			WHERE DVSN_2_NO = #{dvsn2No}
+			),
+			ST2 AS ( SELECT TYPE, GID, HP_ID FROM MEDIA_CONTAINS WHERE TYPE = 'e_display' AND GID IN ( SELECT GID FROM ST1 ) ),
+			ST3 AS ( SELECT CC.TYPE, CC.GID, 
+			TRUNC(SUM(TARGET / HP.ADM_CNT::NUMERIC / 2::NUMERIC + TARGET / HP.REG_CNT::NUMERIC / 2::NUMERIC)) AS TARGET_OTS,
+			TRUNC(SUM(TOTAL / HP.ADM_CNT::NUMERIC / 2::NUMERIC + TOTAL / HP.REG_CNT::NUMERIC / 2::NUMERIC)) AS TOTAL_OTS
+			FROM BASE_HEATPOINT HP 
+			LEFT JOIN (SELECT REG_CD ,
+			<foreach collection="targetList" item="target" open="SUM(" separator="+" close=") AS TARGET">${target}</foreach>, SUM(TOT) AS TOTAL
+			FROM BASE_DATA_TMP 
+			<![CDATA[
+			WHERE PDATE >= #{stdt} AND PDATE <= #{eddt} GROUP BY REG_CD) HD ON HP.REG_CD::TEXT = HD.REG_CD::TEXT
+			]]>
+			JOIN ST2 CC ON HP.ID = CC.HP_ID
+			GROUP BY CC.TYPE, CC.GID)
+			SELECT ROW_NUMBER() OVER(ORDER BY a.gid ASC) AS NO,
+			a.name, a.size,a.spec,a.operation_time,a.ad_price_month, A.TYPE, A.GID, B.TARGET_OTS, B.TOTAL_OTS FROM ST1 A JOIN ST3 B ON A.TYPE = B.TYPE AND A.GID = B.GID
+			ORDER BY NO ASC
+			LIMIT 100 OFFSET (${page} - 1) * 100
+		</if>
+	</select>
+	
+	<select id="selectMediaBillboardList" parameterType="EgovMap" resultType="EgovMap">
+		<if test='base.equals("billboard")'> 
+			WITH ST1 AS ( 
+			SELECT NAME, AD_AREA_CNT,FRONT_SIZE,LEFTSIDE_SIZE,RIGHTSIDE_SIZE,BACK_SIZE,AD_PRICE_MONTH, AD_MAKE_PRICE, TYPE, GID FROM BILLBOARD 
+			WHERE DVSN_2_NO = #{dvsn2No}
+			),
+			ST2 AS ( SELECT TYPE, GID, HP_ID FROM MEDIA_CONTAINS WHERE TYPE = 'billboard' AND GID IN ( SELECT GID FROM ST1 ) ),
+			ST3 AS ( SELECT CC.TYPE, CC.GID, 
+			TRUNC(SUM(TARGET / HP.ADM_CNT::NUMERIC / 2::NUMERIC + TARGET / HP.REG_CNT::NUMERIC / 2::NUMERIC)) AS TARGET_OTS,
+			TRUNC(SUM(TOTAL / HP.ADM_CNT::NUMERIC / 2::NUMERIC + TOTAL / HP.REG_CNT::NUMERIC / 2::NUMERIC)) AS TOTAL_OTS
+			FROM BASE_HEATPOINT HP 
+			LEFT JOIN (SELECT REG_CD ,
+			<foreach collection="targetList" item="target" open="SUM(" separator="+" close=") AS TARGET">${target}</foreach>, SUM(TOT) AS TOTAL
+			FROM BASE_DATA_TMP 
+			<![CDATA[
+			WHERE PDATE >= #{stdt} AND PDATE <= #{eddt} GROUP BY REG_CD) HD ON HP.REG_CD::TEXT = HD.REG_CD::TEXT
+			]]>
+			JOIN ST2 CC ON HP.ID = CC.HP_ID
+			GROUP BY CC.TYPE, CC.GID)
+			SELECT ROW_NUMBER() OVER(ORDER BY A.GID ASC) AS NO,
+			A.NAME, A.AD_AREA_CNT,A.FRONT_SIZE,A.LEFTSIDE_SIZE,A.RIGHTSIDE_SIZE,A.BACK_SIZE,A.AD_PRICE_MONTH, A.AD_MAKE_PRICE, A.TYPE, A.GID, B.TARGET_OTS, B.TOTAL_OTS FROM ST1 A JOIN ST3 B ON A.TYPE = B.TYPE AND A.GID = B.GID
+			ORDER BY NO ASC
+			LIMIT 100 OFFSET (${page} - 1) * 100
+		</if>
+	</select>
+	
+	<select id="selectMediaOuterwallList" parameterType="EgovMap" resultType="EgovMap">
+		<if test='base.equals("outerwall")'> 
+			WITH ST1 AS ( 
+			SELECT BD_NM, INSTALL_QT,TERM,AD_PRICE,AD_MAKE_PRICE,SIZE, TYPE, GID FROM OUTERWALL 
+			WHERE DVSN_2_NO = #{dvsn2No}
+			),
+			ST2 AS ( SELECT TYPE, GID, HP_ID FROM MEDIA_CONTAINS WHERE TYPE = 'outerwall' AND GID IN ( SELECT GID FROM ST1 ) ),
+			ST3 AS ( SELECT CC.TYPE, CC.GID, 
+			TRUNC(SUM(TARGET / HP.ADM_CNT::NUMERIC / 2::NUMERIC + TARGET / HP.REG_CNT::NUMERIC / 2::NUMERIC)) AS TARGET_OTS,
+			TRUNC(SUM(TOTAL / HP.ADM_CNT::NUMERIC / 2::NUMERIC + TOTAL / HP.REG_CNT::NUMERIC / 2::NUMERIC)) AS TOTAL_OTS
+			FROM BASE_HEATPOINT HP 
+			LEFT JOIN (SELECT REG_CD ,
+			<foreach collection="targetList" item="target" open="SUM(" separator="+" close=") AS TARGET">${target}</foreach>, SUM(TOT) AS TOTAL
+			FROM BASE_DATA_TMP 
+			<![CDATA[
+			WHERE PDATE >= #{stdt} AND PDATE <= #{eddt} GROUP BY REG_CD) HD ON HP.REG_CD::TEXT = HD.REG_CD::TEXT
+			]]>
+			JOIN ST2 CC ON HP.ID = CC.HP_ID
+			GROUP BY CC.TYPE, CC.GID)
+			SELECT ROW_NUMBER() OVER(ORDER BY A.GID ASC) AS NO,
+			A.BD_NM, A.INSTALL_QT,A.TERM,A.AD_PRICE,A.AD_MAKE_PRICE,A.SIZE, A.TYPE, A.GID, B.TARGET_OTS, B.TOTAL_OTS FROM ST1 A JOIN ST3 B ON A.TYPE = B.TYPE AND A.GID = B.GID
+			ORDER BY NO ASC
+			LIMIT 100 OFFSET (${page} - 1) * 100
+		</if>
+	</select>
+	
+	<select id="selectSubMediaList" parameterType="EgovMap" resultType="EgovMap">
+		<if test='base.equals("shelter")'>
+			WITH ST1 AS ( 
+			SELECT MEDIA_ID, SUG_AREA, TO_CHAR(AD_PRICE_MONTH::NUMERIC, 'FM9,999,999,999') AS AD_PRICE_MONTH, 
+			TO_CHAR(AD_MAKE_PRICE::NUMERIC, 'FM9,999,999,999') AS AD_MAKE_PRICE, AD_RATING_NO, TYPE, GID FROM SHELTER 
+			WHERE DVSN_2_NO = #{dvsn2No} AND SHELTER_ID = #{mid}
+			),
+			ST2 AS ( SELECT TYPE, GID, HP_ID FROM MEDIA_CONTAINS WHERE TYPE = 'shelter' AND GID IN ( SELECT GID FROM ST1 ) ),
+			ST3 AS ( SELECT CC.TYPE, CC.GID, 
+			TRUNC(SUM(TARGET / HP.ADM_CNT::NUMERIC / 2::NUMERIC + TARGET / HP.REG_CNT::NUMERIC / 2::NUMERIC)) AS TARGET_OTS,
+			TRUNC(SUM(TOTAL / HP.ADM_CNT::NUMERIC / 2::NUMERIC + TOTAL / HP.REG_CNT::NUMERIC / 2::NUMERIC)) AS TOTAL_OTS
+			FROM BASE_HEATPOINT HP 
+			LEFT JOIN (SELECT REG_CD ,
+			<foreach collection="targetList" item="target" open="SUM(" separator="+" close=") AS TARGET">${target}</foreach>, SUM(TOT) AS TOTAL
+			FROM BASE_DATA_TMP 
+			<![CDATA[
+			WHERE PDATE >= #{stdt} AND PDATE <= #{eddt} GROUP BY REG_CD) HD ON HP.REG_CD::TEXT = HD.REG_CD::TEXT
+			]]>
+			JOIN ST2 CC ON HP.ID = CC.HP_ID
+			GROUP BY CC.TYPE, CC.GID)
+			SELECT A.GID, A.MEDIA_ID, A.SUG_AREA, A.AD_PRICE_MONTH, A.AD_MAKE_PRICE, B.TARGET_OTS, B.TOTAL_OTS FROM ST1 A JOIN ST3 B ON A.TYPE = B.TYPE AND A.GID = B.GID
+			ORDER BY A.AD_RATING_NO ASC, A.MEDIA_ID ASC
+		</if>
+	</select>
+	
+	<select id="selectSubMediaGdiaList" parameterType="EgovMap" resultType="EgovMap">
+		<if test='base.equals("gdia")'>
+			WITH ST1 AS ( SELECT GID, LINE, METRO_CD, STATION_NM, MEDIA_TYPE, AD_RATING, QUANTITY, TO_CHAR(AD_PRICE_MONTH::NUMERIC, 'FM9,999,999,999') AS AD_PRICE_MONTH, 
+			TO_CHAR(UNIT_PRICE::NUMERIC, 'FM9,999,999,999') AS UNIT_PRICE, TYPE FROM GDIA
+			WHERE DVSN_2_NO = #{dvsn2No} AND station_nm = #{mid}
+			),ST2 AS (
+			SELECT LINE_NUM, SUB_STA_NM, SUM(COALESCE(RIDE_PASGR_NUM,0)+COALESCE(ALIGHT_PASGR_NUM,0)) AS PASGR_NUM FROM CARD_SUBWAY_STATISTICS
+			<![CDATA[
+			WHERE USE_DT >= #{stdt} AND USE_DT <= #{eddt}
+			]]>
+			AND (LINE_NUM, SUB_STA_NM) IN (SELECT LINE, STATION_NM FROM ST1)
+			GROUP BY LINE_NUM, SUB_STA_NM
+			)
+			SELECT A.GID, A.MEDIA_TYPE, A.AD_RATING, A.QUANTITY, A.AD_PRICE_MONTH, A.UNIT_PRICE, SUM(B.PASGR_NUM) AS TARGET_OTS, SUM(B.PASGR_NUM) AS TOTAL_OTS
+			FROM ST1 A JOIN ST2 B ON A.LINE = B.LINE_NUM AND A.STATION_NM = B.SUB_STA_NM
+			GROUP BY A.GID, A.MEDIA_TYPE, A.AD_RATING, A.QUANTITY, A.AD_PRICE_MONTH, A.UNIT_PRICE
+			ORDER BY AD_RATING ASC
+		</if>
+	</select>
+	
+	<select id="selectSubMediapsdList" parameterType="EgovMap" resultType="EgovMap">
+		<if test='base.equals("psd")'>
+			WITH ST1 AS ( SELECT GID, LINE, METRO_CD, PSD_METRO, PSD_ID, PSD_TYPE, AD_PACKAGE, PSD_NO, TO_CHAR(AD_PRICE_MONTH::NUMERIC, 'FM9,999,999,999') AS AD_PRICE_MONTH, 
+			TO_CHAR(AD_MAKE_PRICE::NUMERIC, 'FM9,999,999,999') AS AD_MAKE_PRICE, TYPE FROM PSD
+			WHERE DVSN_2_NO = #{dvsn2No} AND METRO_CD = #{mid}
+			),ST2 AS (
+			SELECT LINE_NUM, SUB_STA_NM, SUM(COALESCE(RIDE_PASGR_NUM,0)+COALESCE(ALIGHT_PASGR_NUM,0)) AS PASGR_NUM FROM CARD_SUBWAY_STATISTICS
+			<![CDATA[
+			WHERE USE_DT >= #{stdt} AND USE_DT <= #{eddt}
+			]]>
+			AND (LINE_NUM, SUB_STA_NM) IN (SELECT LINE, PSD_METRO FROM ST1)
+			GROUP BY LINE_NUM, SUB_STA_NM
+			)
+			SELECT A.GID, A.PSD_ID, A.PSD_NO, A.PSD_TYPE, A.AD_PRICE_MONTH, A.AD_MAKE_PRICE, SUM(B.PASGR_NUM) AS TARGET_OTS, SUM(B.PASGR_NUM) AS TOTAL_OTS
+			FROM ST1 A JOIN ST2 B ON A.LINE = B.LINE_NUM AND A.PSD_METRO = B.SUB_STA_NM
+			GROUP BY A.GID, A.PSD_ID,  A.PSD_NO, A.PSD_TYPE, A.AD_PRICE_MONTH, A.AD_MAKE_PRICE
+			ORDER BY PSD_NO ASC
+		</if>
+	</select>
+	
+		<select id="selectFacilityWhere" parameterType="EgovMap" resultType="EgovMap">
+		<![CDATA[
+			SELECT 
+				DVSN_1_NO,
+				DVSN_2_NO, 
+				BASE
+			FROM
+				BASE_TYPE
+			WHERE DVSN_1_NO = #{dvsnA}::integer
+			AND DVSN_2_NO = #{dvsnB}::integer
+			AND	IS_MEDIA = 'facility'
+		]]>
+	</select>
+	
+	<select id="selectFacilityList" parameterType="EgovMap" resultType="EgovMap">
+		<if test='base.equals("facility_schl")'>
+		<![CDATA[
+			SELECT gid, SCHL_ID, ESTAB_TYPE, SCHL_NM, ROAD_ADDRES FROM ${base} WHERE DVSN_1_NO = #{dvsn1No}  
+			AND DVSN_2_NO = #{dvsn2No}
+			ORDER BY SCHL_NM ASC
+			LIMIT 100 OFFSET (${page} - 1) * 100
+		]]>
+		</if>
+		<if test='base.equals("facility_univ")'>
+		<![CDATA[
+			SELECT gid, UNIV_NM, ROAD_ADDRESS FROM ${base} WHERE DVSN_1_NO = #{dvsn1No}  
+			AND DVSN_2_NO = #{dvsn2No}
+			ORDER BY UNIV_NM ASC
+			LIMIT 100 OFFSET (${page} - 1) * 100
+		]]>
+		</if>
+		<if test='base.equals("facility_apt")'>
+		<![CDATA[
+			SELECT gid, APT_CD, APT_NM, ROAD_ADDRES FROM ${base} WHERE DVSN_1_NO = #{dvsn1No}  
+			AND DVSN_2_NO = #{dvsn2No}
+			ORDER BY APT_NM ASC
+			LIMIT 100 OFFSET (${page} - 1) * 100
+		]]>
+		</if>
+		<if test='base.equals("facility_store")'>
+		<![CDATA[
+			SELECT gid, STORE_CD, BRAND_NM, STORE_NM, ROAD_ADDRESS FROM ${base} WHERE DVSN_1_NO = #{dvsn1No}  
+			AND DVSN_2_NO = #{dvsn2No}
+			ORDER BY BRAND_NM, STORE_NM ASC
+			LIMIT 100 OFFSET (${page} - 1) * 100
+		]]>
+		</if>
+	</select>
+	
+	
+<!-- 	시설물 파일 업로드 -->
+		<select id="selectFacilityFileWhere" parameterType="EgovMap" resultType="EgovMap">
+		<if test='target.equals("f")'>
+			<![CDATA[
+			SELECT 
+				DVSN_1_NO,
+				DVSN_2_NO, 
+				BASE
+			FROM
+				BASE_TYPE
+			WHERE DVSN_1_NO = #{dvsnA}::integer
+			AND DVSN_2_NO = #{dvsnB}::integer
+			AND	IS_MEDIA = 'facility'
+		]]>
+		</if>
+		<if test='target.equals("m")'>
+			<![CDATA[
+			SELECT 
+				DVSN_1_NO,
+				DVSN_2_NO, 
+				BASE
+			FROM
+				BASE_TYPE
+			WHERE DVSN_1_NO = #{dvsnA}::integer
+			AND DVSN_2_NO = #{dvsnB}::integer
+			AND	IS_MEDIA = 'media'
+		]]>
+		</if>
+
+	</select>
+	
+	<select id="selectFacilityFileList" parameterType="EgovMap" resultType="EgovMap">
+		<foreach collection="paramlist" item="p" open="SELECT GID FROM(" separator=" UNION ALL" close=")F">
+			SELECT GID FROM ${base} WHERE DVSN_1_NO = #{dvsn1No}::integer AND DVSN_2_NO = #{dvsn2No}::integer
+			<choose>
+				<when test='base.equals("facility_schl")'>AND SCHL_NM = #{p.dataNm} AND ROAD_ADDRES = #{p.dataAdr}</when>
+				<when test='base.equals("facility_univ")'>AND UNIV_NM = #{p.dataNm} AND ROAD_ADDRESS = #{p.dataAdr}</when>
+				<when test='base.equals("facility_apt")'>AND APT_NM = #{p.dataNm} AND ROAD_ADDRES = #{p.dataAdr}</when>
+				<when test='base.equals("facility_store")'>AND STORE_NM = #{p.dataNm} AND ROAD_ADDRESS = #{p.dataAdr}</when>
+				<when test='base.equals("")'>LIMIT 0</when>
+				<when test='base.equals("shelter")'>AND shelter_nm = #{p.shelterNm} AND shelter_dvsn_nm = #{p.shelterDvsnNm} AND sug_area = #{p.sugArea}</when>
+				<when test='base.equals("psd")'>AND line = #{p.line} AND psd_metro = #{p.psdMetro} AND psd_no = #{p.psdNo}</when>
+				<when test='base.equals("gdia")'>AND line = #{p.line} AND station_nm = #{p.stationNm} AND media_type = #{p.mediaType}</when>
+				<when test='base.equals("bus")'>AND start_point = #{p.startPoint} AND end_point = #{p.endPoint}</when>
+				<when test='base.equals("townboard")'>AND bd_type = #{p.bdType} AND apt_nm = #{p.aptNm}</when>
+				<when test='base.equals("e_display")'>AND name = #{p.name} AND address = #{p.address}</when>
+				<when test='base.equals("billboard")'>AND name = #{p.name} AND area = #{p.area}</when>
+				<when test='base.equals("outerwall")'>AND sd_nm = #{p.sdNm} AND bd_nm = #{p.bdNm}</when>
+			</choose>
+		</foreach>		
+	</select>
+	
+	<insert id="insertCampaign" parameterType="EgovMap">
+		<![CDATA[
+			INSERT INTO CAMPAIGN(
+				C_NO,
+				C_CTXT,
+				C_TIT,
+				C_ADVR,
+				S_DT,
+				E_DT,
+				C_DT,
+				M_DT,
+				T_AG,
+				T_GNDR,
+				C_BDGT_RSLT,
+				C_PRGS_STTS,
+				A_SGST,
+				C_WRTR,
+				IS_NW,
+				TOTAL_OTS,
+				TARGET_OTS
+			)VALUES(
+				DEFAULT,
+				#{cid},
+				#{cpn},
+				#{adv},
+				TO_DATE(#{sdt},'YYYY-MM-DD'),
+				TO_DATE(#{edt},'YYYY-MM-DD'),
+				NOW(),
+				NOW(),
+				#{age},
+				#{cpt},
+				#{adPriceMonth}::NUMERIC,
+				#{cPrgsStts},
+				'N',
+				(SELECT ID FROM A_01_INFO WHERE U_ID = #{uid}),
+				'Y',
+				#{totalOts},
+				#{targetOts}
+			);
+
+		]]>
+	</insert>
+	
+	<update id="updateCampaign" parameterType="EgovMap">
+		UPDATE CAMPAIGN 
+		SET
+			M_DT = NOW(),
+			C_TIT = #{cpn},
+			C_ADVR = #{adv},
+			S_DT = TO_DATE(#{sdt},'YYYY-MM-DD'), 
+			E_DT = TO_DATE(#{edt},'YYYY-MM-DD'),
+			T_AG = #{age},
+			T_GNDR = #{cpt},
+			C_BDGT_RSLT = #{adPriceMonth}::NUMERIC,
+			TOTAL_OTS = #{totalOts},
+			TARGET_OTS = #{targetOts}
+		WHERE 
+			C_CTXT = #{cid}
+			AND C_WRTR = (SELECT ID FROM A_01_INFO WHERE U_ID = #{uid})
+	</update>
+	
+	<select id="selectConflictCampaignCnt" parameterType="EgovMap" resultType="int">
+		<![CDATA[
+			SELECT COUNT(*) AS CNT FROM CAMPAIGN WHERE C_CTXT LIKE #{cid}
+		]]>
+	</select>
+	
+	<insert id="insertCampaignMedia" parameterType="EgovMap">
+		<![CDATA[
+			INSERT INTO CAMPAIGN_MEDIA(
+				C_NO, IS_MEDIA, DVSN_1_NO, DVSN_2_NO, ICON_TYPE, ICON_COLOR, GID, QUANTITY, PRE_TARGET_OTS, PRE_TOTAL_OTS, AVAIL
+			)
+			VALUES(
+			(SELECT C_NO FROM CAMPAIGN WHERE C_CTXT LIKE #{cid}),
+			#{isMedia},
+			${dvsnA},
+			${dvsnB},
+			#{unicon},
+			#{uniconColor}, 
+			${gid},
+			${quantity},
+			#{preTargetOts}::integer,
+			#{preTotalOts}::integer,
+			#{avail}
+			)
+		]]>
+	</insert>
+	
+	<insert id="insertCampaignPackage" parameterType="EgovMap">
+		INSERT INTO CAMPAIGN_PACKAGE(
+			C_NO, IS_MEDIA, DVSN_1_NO, DVSN_2_NO, ICON_TYPE, ICON_COLOR, PKG_ID
+		)
+		VALUES(
+		(SELECT C_NO FROM CAMPAIGN WHERE C_CTXT LIKE #{cid}),
+		#{isMedia},
+		${dvsnA},
+		${dvsnB},
+		#{unicon},
+		#{uniconColor}, 
+		#{pkgId}
+		)
+	</insert>
+	
+	<insert id="insertCampaignPackageMedia" parameterType="EgovMap">
+		INSERT INTO CAMPAIGN_MEDIA(C_NO, IS_MEDIA, DVSN_1_NO, DVSN_2_NO, ICON_TYPE, ICON_COLOR, GID, PRE_TARGET_OTS, PRE_TOTAL_OTS)
+		SELECT 
+		(SELECT C_NO FROM CAMPAIGN WHERE C_CTXT LIKE #{cid}),
+		#{isMedia},
+		${dvsnA},
+		${dvsnB},
+		#{unicon},
+		#{uniconColor}, 
+		X.GID,
+		X.TARGET_OTS,
+		X.TOTAL_OTS
+		FROM(
+			<if test='dvsnA.equals("2") and dvsnB.equals("2")'>
+				SELECT A.GID,
+				SUM(C.PASGR_NUM) AS TARGET_OTS,
+				SUM(C.PASGR_NUM) AS TOTAL_OTS
+				FROM PKG_MEDIA A
+				JOIN GDIA B ON A.GID = B.GID
+				LEFT OUTER JOIN (
+				SELECT LINE_NUM, SUB_STA_NM, SUM(COALESCE(RIDE_PASGR_NUM,0)+COALESCE(ALIGHT_PASGR_NUM,0)) AS PASGR_NUM FROM CARD_SUBWAY_STATISTICS 
+				<![CDATA[
+				WHERE USE_DT >= REPLACE(#{stDt},'.','') AND USE_DT <= REPLACE(#{edDt},'.','') 
+				]]>
+				GROUP BY LINE_NUM, SUB_STA_NM ) C ON C.LINE_NUM = B.LINE AND C.SUB_STA_NM = B.STATION_NM
+				WHERE A.TYPE = 'gdia' AND PKG_ID = #{pkgId}
+				GROUP BY A.GID
+			</if>
+			<if test='dvsnA.equals("4") and dvsnB.equals("1")'>
+				SELECT A.GID,
+				TRUNC(B.HOUSEHOLDS_CNT * B.AVG_HOUSEHOLDS * B.WEIGHT * (TO_DATE(#{edDt},'YYYY.MM.DD') - TO_DATE(#{stDt},'YYYY.MM.DD'))) AS TARGET_OTS,
+				TRUNC(B.HOUSEHOLDS_CNT * B.AVG_HOUSEHOLDS * B.WEIGHT * (TO_DATE(#{edDt},'YYYY.MM.DD') - TO_DATE(#{stDt},'YYYY.MM.DD'))) AS TOTAL_OTS
+				FROM PKG_MEDIA A
+				JOIN MEDIABOARD B ON A.GID = B.GID
+				WHERE A.TYPE = 'mediaboard' AND PKG_ID = #{pkgId}
+			</if>
+			<if test='dvsnA.equals("4") and dvsnB.equals("2")'>
+				SELECT A.GID,
+				TRUNC(B.HOUSEHOLDS_CNT * B.AVG_HOUSEHOLDS * B.WEIGHT * (TO_DATE(#{edDt},'YYYY.MM.DD') - TO_DATE(#{stDt},'YYYY.MM.DD'))) AS TARGET_OTS,
+				TRUNC(B.HOUSEHOLDS_CNT * B.AVG_HOUSEHOLDS * B.WEIGHT * (TO_DATE(#{edDt},'YYYY.MM.DD') - TO_DATE(#{stDt},'YYYY.MM.DD'))) AS TOTAL_OTS
+				FROM PKG_MEDIA A
+				JOIN TOWNBOARD B ON A.GID = B.GID
+				WHERE A.TYPE = 'townboard' AND PKG_ID = #{pkgId}
+			</if>
+		)X
+	</insert>
+	
+	<select id="selectBase" parameterType="EgovMap" resultType="EgovMap">
+		<![CDATA[
+			SELECT 
+				BASE
+			FROM
+				BASE_TYPE
+			WHERE
+				IS_MEDIA = #{ism}
+			AND
+				DVSN_1_NO = #{d1}::integer
+			AND
+				DVSN_2_NO = #{d2}::integer
+		]]>
+	</select>
+	
+	<delete id="deleteCampaign" parameterType="EgovMap">
+		DELETE FROM CAMPAIGN WHERE C_CTXT = #{cid}
+	</delete>
+	
+	<delete id="deleteCampaignMedia" parameterType="EgovMap">
+		DELETE FROM CAMPAIGN_MEDIA WHERE C_NO IN (SELECT C_NO FROM CAMPAIGN WHERE C_CTXT = #{cid})
+	</delete>
+	
+	<delete id="deleteCampaignPackage" parameterType="EgovMap">
+		DELETE FROM CAMPAIGN_PACKAGE WHERE C_NO IN (SELECT C_NO FROM CAMPAIGN WHERE C_CTXT = #{cid})
+	</delete>
+	
+	<insert id="insertAccessLog" parameterType="EgovMap">
+		<![CDATA[
+			INSERT INTO access_log 
+			VALUES(
+			#{uid},
+			#{accessurl},
+			#{accesstime}::date
+			)
+		]]>
+	</insert>
+	
+	<update id="updateCampaignReserve" parameterType="EgovMap">
+		UPDATE CAMPAIGN SET C_PRGS_STTS = '2' WHERE C_CTXT = #{cid} AND C_WRTR = (SELECT ID FROM A_01_INFO WHERE U_ID = #{uid})
+	</update>
+	
+	<select id="selectCampaignInfo" parameterType="EgovMap" resultType="EgovMap">
+		<![CDATA[
+			SELECT 
+				C_NO,
+				C_CTXT,
+				C_TIT,
+				C_ADVR,
+				TO_CHAR(S_DT, 'YY.MM.DD') AS S_DT,
+				TO_CHAR(E_DT, 'YY.MM.DD') AS E_DT,
+				TO_CHAR(C_DT, 'YY.MM.DD') AS C_DT,
+				TO_CHAR(M_DT, 'YY.MM.DD') AS M_DT,
+				T_AG,
+				T_GNDR,
+				C_BDGT_LMT,
+				C_BDGT_RSLT,
+				C_PRGS_STTS,
+				A_SGST,
+				C_WRTR,
+				IS_NW,
+				TOTAL_OTS,
+				TARGET_OTS
+			 FROM 
+			 	CAMPAIGN WHERE C_CTXT = #{cid}
+		]]>
+	</select>
+	
+	<select id="selectInfoBase" resultType="EgovMap" parameterType="EgovMap">
+		<![CDATA[
+			SELECT *, 
+				 #{cid} as cid 
+			FROM 
+				base_type 
+			WHERE(
+				is_media, 
+				dvsn_1_no, 
+				dvsn_2_no) 
+			IN(
+				SELECT 
+					is_media, 
+					dvsn_1_no, 
+					dvsn_2_no 
+				FROM 
+					campaign_media A 
+				WHERE 
+					c_no = (
+						SELECT 
+							c_no 
+						FROM  
+							campaign 
+						WHERE 
+							c_ctxt = #{cid}
+					)
+			)
+			]]>
+	</select>
+	
+	<select id="selectInfoList" resultType="EgovMap" parameterType="EgovMap">
+		<![CDATA[
+			SELECT
+				A.IS_MEDIA,
+				D.DVSN_1_NO,
+				D.DVSN_1_NM,
+				D.DVSN_2_NO,
+				D.DVSN_2_NM,
+				C.TYPE,
+				A.ICON_COLOR,
+				A.ICON_TYPE,
+				COUNT(A.GID) AS CNT
+				]]>
+				<if test='base.equals("shelter")'>
+					,SUM(C.AD_MAKE_PRICE::INTEGER) AS AD_MAKE_PRICE,
+					SUM(C.AD_PRICE_MONTH::INTEGER) AS AD_PRICE_MONTH
+				</if>
+				<if test='base.equals("psd")'>
+					,SUM(C.AD_MAKE_PRICE::INTEGER) AS AD_MAKE_PRICE,
+					SUM(C.AD_PRICE_MONTH::INTEGER) AS AD_PRICE_MONTH
+				</if>
+				<if test='base.equals("gdia")'>
+					,SUM(C.unit_price::INTEGER) AS unit_price,
+					SUM(C.AD_PRICE_MONTH::INTEGER) AS AD_PRICE_MONTH
+				</if>
+				<if test='base.equals("bus")'>
+					,SUM(C.AD_MAKE_PRICE::INTEGER) AS AD_MAKE_PRICE,
+					SUM(C.AD_PRICE_MONTH::INTEGER) AS AD_PRICE_MONTH
+				</if>
+				<if test='base.equals("mediaboard")'>
+				
+				</if>
+				<if test='base.equals("townboard")'>
+					,SUM(C.AD_PRICE_MONTH_1::INTEGER + C.AD_PRICE_MONTH_2::INTEGER) AS AD_PRICE_MONTH
+				</if>
+				<if test='base.equals("e_display")'>
+					,SUM(C.AD_PRICE_MONTH::INTEGER) AS AD_PRICE_MONTH
+				</if>
+				<if test='base.equals("billboard")'>
+					,SUM(C.AD_MAKE_PRICE::INTEGER) AS AD_MAKE_PRICE,
+					SUM(C.AD_PRICE_MONTH::INTEGER) AS AD_PRICE_MONTH
+				</if>
+				<if test='base.equals("outerwall")'>
+					,SUM(C.AD_MAKE_PRICE::INTEGER) AS AD_MAKE_PRICE,
+					SUM(C.ad_price::INTEGER) AS ad_price
+				</if>
+				<![CDATA[
+			FROM(
+             	SELECT * FROM 
+        			campaign_media 
+    			WHERE 
+    				campaign_media.c_no = (
+    					SELECT 
+    						campaign.c_no 
+    					FROM 
+    						campaign 
+    					WHERE 
+    						campaign.c_ctxt = #{cid}
+    				)
+        			AND campaign_media.is_media = 'media'
+        			AND campaign_media.dvsn_1_no = ${dvsn1No}
+                    AND campaign_media.dvsn_2_no = ${dvsn2No}
+            )  A 
+            ,${base} c
+            ,base_type d
+           	WHERE 
+               	A.gid = c.gid
+               	AND d.dvsn_1_no = ${dvsn1No} 
+               	AND A.dvsn_2_no =  d.dvsn_2_no
+               	AND d.base = #{base}
+              	GROUP BY 
+				A.IS_MEDIA,
+				D.DVSN_1_NO,
+				D.DVSN_1_NM,
+				D.DVSN_2_NO,
+				D.DVSN_2_NM,
+				C.TYPE,
+				A.ICON_COLOR,
+				A.ICON_TYPE
+				]]>
+	</select>
+	
+	<insert id="insertFile" parameterType="EgovMap">
+		<![CDATA[
+			INSERT INTO campaign_map(
+			c_ctxt
+			,file_org_name
+			,file_svr_name
+			,size
+		)
+		VALUES ( 
+			#{cCtxt }
+			,#{fileOrgName }
+			,#{savefilename }
+			,#{size }
+		)
+		]]>
+	</insert>
+	
+	<select id="selectMediaFilterList" parameterType="EgovMap" resultType="EgovMap">
+		<if test='type.equals("include")'>
+	 		SELECT A.GID FROM ${stBase} A JOIN 
+			${tgBase} B ON ST_DWITHIN(B.GEOM, A.GEOM, ${distance}/100000::float)
+			WHERE 
+				A.DVSN_1_NO = ${stDvsn1No} 
+			AND A.DVSN_2_NO = ${stDvsn2No}
+			AND B.DVSN_1_NO = ${tgDvsn1No} 
+			<if test="tgDvsn2No > 0">AND B.DVSN_2_NO = ${tgDvsn2No}</if>
+			<foreach collection="targetList" item="gid" open="AND B.GID IN (" separator="," close=")">${gid}</foreach>
+			GROUP BY A.GID
+			ORDER BY A.GID
+		</if>
+		<if test='type.equals("nearest")'>
+			SELECT X.GID FROM ${stBase} X JOIN 
+			${tgBase} Y ON ST_DWITHIN(Y.GEOM, X.GEOM, 1000/100000::float)
+			WHERE (Y.GID, ST_Distance (Y.GEOM, X.GEOM)) IN (
+				SELECT B.GID, MIN(ST_Distance (B.GEOM, A.GEOM)) FROM ${stBase} A JOIN 
+				${tgBase} B ON ST_DWITHIN(B.GEOM, A.GEOM, 1000/100000::float)
+				WHERE 	
+					A.DVSN_1_NO = ${stDvsn1No} 
+				AND A.DVSN_2_NO = ${stDvsn2No}
+				AND B.DVSN_1_NO = ${tgDvsn1No} 
+				<if test="tgDvsn2No > 0">AND B.DVSN_2_NO = ${tgDvsn2No}</if>
+				<foreach collection="targetList" item="gid" open="AND B.GID IN (" separator="," close=")">${gid}</foreach>
+				GROUP BY B.GID
+			)
+			AND	X.DVSN_1_NO = ${stDvsn1No} 
+			AND X.DVSN_2_NO = ${stDvsn2No}
+			AND Y.DVSN_1_NO = ${tgDvsn1No} 
+			<if test="tgDvsn2No > 0">AND Y.DVSN_2_NO = ${tgDvsn2No}</if>
+			GROUP BY X.GID
+			ORDER BY X.GID
+		</if>
+	</select>
+	
+	<insert id="insertBasicView" parameterType="EgovMap">
+		<![CDATA[
+			INSERT INTO basic_view(
+			c_ctxt
+			,zoom
+			,basic_long
+			,basic_lat
+		)
+		VALUES ( 
+			#{cid}
+			,${zoom}
+			,${longitude}::numeric
+			,${latitude}::numeric
+		)
+		]]>
+	</insert>
+	
+	<delete id="deleteBasicView" parameterType="EgovMap">
+		delete from basic_view where c_ctxt = #{cid}
+	</delete>
+	
+	<select id="selectBasicView" parameterType="EgovMap" resultType="EgovMap">
+		select * from basic_view where c_ctxt = #{cid}
+	</select>
+	
+	<select id="selectCampaign" parameterType="EgovMap" resultType="EgovMap">
+		SELECT 
+			C_NO,
+			C_CTXT,
+			C_TIT,
+			C_ADVR,
+			TO_CHAR(S_DT, 'YYYY.MM.DD') AS S_DT,
+			TO_CHAR(E_DT, 'YYYY.MM.DD') AS E_DT,
+			SUBSTRING(T_AG,1,2) AS MINAG,
+			SUBSTRING(T_AG,3,2) AS MAXAG,
+			T_GNDR,
+			C_BDGT_LMT,
+			C_BDGT_RSLT
+		FROM 
+			CAMPAIGN 
+		WHERE C_CTXT = #{cid}
+			AND C_WRTR = (SELECT ID FROM A_01_INFO WHERE U_ID = #{uid} LIMIT 1)
+	</select>
+	
+	<update id="updateCampaignLive">
+		UPDATE CAMPAIGN SET C_PRGS_STTS = '6' WHERE C_PRGS_STTS = '5' AND S_DT <![CDATA[ < NOW()]]>
+	</update>
+	
+	<update id="updateCampaignEnd">
+		UPDATE CAMPAIGN SET C_PRGS_STTS = '7' WHERE C_PRGS_STTS = '6' AND (E_DT+1) <![CDATA[ < NOW()]]>
+	</update>
+	
+	<insert id="insertInterFacility" parameterType="EgovMap">
+		<![CDATA[
+			INSERT INTO extract
+				(c_no,dvsn_1_no,dvsn_2_no,tg_dvsn_1_no,tg_dvsn_2_no,distance,extract_type )
+			VALUES(
+				( SELECT c_no FROM campaign WHERE c_ctxt = #{cid} )
+				, #{dvsn1No}::integer
+				, #{dvsn2No}::integer
+				, #{tgDvsn1No}::integer
+				, #{tgDvsn2No}::integer
+				, #{distance}
+				, #{extractType}
+			)
+		]]>
+	</insert>
+	
+	<delete id="deleteInterFacility" parameterType="EgovMap">
+		<![CDATA[
+			DELETE FROM extract WHERE C_NO IN (SELECT C_NO FROM CAMPAIGN WHERE C_CTXT = #{cid})
+		]]>
+	</delete>
+	
+	<select id="editMediaList" parameterType="EgovMap" resultType="EgovMap">
+		<![CDATA[
+ 			SELECT C.DVSN_1_NM, C.DVSN_2_NM, B.IS_MEDIA, B.DVSN_1_NO::TEXT AS DVSN_A, B.DVSN_2_NO::TEXT AS DVSN_B, 'unicon-'||ICON_TYPE||'-'||ICON_COLOR||'-fill' AS UNICON, '["'||ARRAY_TO_STRING(ARRAY_AGG(B.GID),'","')||'"]' AS ITEM_LIST
+			FROM   CAMPAIGN A, 
+			CAMPAIGN_MEDIA B, 
+			BASE_TYPE C 
+			WHERE  A.C_NO = B.C_NO 
+			AND C.IS_MEDIA = B.IS_MEDIA 
+			AND C.DVSN_1_NO = B.DVSN_1_NO 
+			AND C.DVSN_2_NO = B.DVSN_2_NO 
+			AND C_CTXT = #{cid}
+			GROUP BY  A.C_CTXT, B.C_NO, B.IS_MEDIA, B.DVSN_1_NO, B.DVSN_2_NO, ICON_TYPE, ICON_COLOR, BASE, C.DVSN_1_NM, C.DVSN_2_NM
+			ORDER  BY B.IS_MEDIA , DVSN_A, DVSN_B
+		]]>
+	</select>
+	
+	<select id="selectTargetingList" parameterType="EgovMap" resultType="EgovMap">
+		SELECT TID AS INDEX, 
+		TO_CHAR(S_DT,'YYYY.MM.DD')||' - '||TO_CHAR(S_DT,'YYYY.MM.DD') AS TRM, 
+		TO_CHAR(S_DT,'YYYY.MM.DD') AS STDT, 
+		TO_CHAR(E_DT,'YYYY.MM.DD') AS EDDT,
+		TO_CHAR(S_DT,'YYYYMMDD') AS MAP_ST_DT, 
+		TO_CHAR(E_DT,'YYYYMMDD') AS MAP_ED_DT,
+		SUBSTRING(T_AG,1,2) AS MINAG, 
+		SUBSTRING(T_AG,3,4) AS MAXAG, 
+		T_AG, 
+		T_GNDR AS CPT, 
+		IS_BASE
+		FROM CAMPAIGN_TARGETING
+		WHERE C_NO = (SELECT C_NO FROM CAMPAIGN WHERE C_CTXT = #{cid});
+	</select>
+	
+	<select id="selectExtractList" parameterType="EgovMap" resultType="EgovMap">
+		SELECT 
+			DVSN_1_NO::TEXT,
+			DVSN_2_NO::TEXT,
+			TG_DVSN_1_NO::TEXT,
+			TG_DVSN_2_NO::TEXT,
+			DISTANCE,
+			EXTRACT_TYPE
+		FROM EXTRACT
+		WHERE C_NO = (SELECT C_NO FROM CAMPAIGN WHERE C_CTXT = #{cid})
+	</select>
+	
+	<insert id="insertLoadStart" parameterType="EgovMap">
+		<selectKey keyProperty="lid" order="AFTER" resultType="int">
+			SELECT MAX(LID) AS LID FROM LAYER_LOAD_TIME
+		</selectKey>
+		INSERT INTO LAYER_LOAD_TIME	VALUES(DEFAULT, DEFAULT, NULL, NULL)
+	</insert>
+	
+	<update id="updateLoadStart" parameterType="EgovMap">
+		UPDATE LAYER_LOAD_TIME SET LOAD_END = DEFAULT, LOAD_STATE = #{state} WHERE LID = ${lid} AND LOAD_END IS NULL
+	</update>
+	
+	<insert id="insertTargetMapping" parameterType="EgovMap">
+		<![CDATA[
+			INSERT INTO CAMPAIGN_TARGETING
+				(tid , c_no, s_dt, e_dt, t_ag, t_gndr, is_base )
+			VALUES(
+				#{tid}
+				, ( SELECT c_no FROM campaign WHERE c_ctxt = #{cid} )
+				, TO_DATE(#{stDt},'YYYY-MM-DD')
+				, TO_DATE(#{edDt},'YYYY-MM-DD')
+				, #{tAg}
+				, #{tGndr}
+				, #{isBase}
+			)
+		]]>
+	</insert>
+	
+	<delete id="deleteTargetMapping" parameterType="EgovMap">
+		<![CDATA[
+			DELETE FROM campaign_targeting WHERE C_NO IN (SELECT C_NO FROM CAMPAIGN WHERE C_CTXT = #{cid})
+		]]>
+	</delete>
+	
+	<select id="selectCheckAccess" parameterType="EgovMap" resultType="int">
+		SELECT COUNT(C_NO) FROM CAMPAIGN
+		WHERE C_WRTR = (SELECT ID FROM A_01_INFO WHERE U_ID = #{uid})
+		AND C_CTXT = #{cid}
+		AND C_PRGS_STTS IN (${prgsStts})
+	</select>
+	
+	<select id="selectCheckNew" parameterType="EgovMap" resultType="int">
+		SELECT COUNT(C_NO) FROM CAMPAIGN
+		WHERE C_CTXT = #{cid}
+	</select>
+	
+	<select id="selectCampaignMediaList" parameterType="EgovMap" resultType="EgovMap">
+		SELECT 
+		ROW_NUMBER() OVER(ORDER BY A.DVSN_1_NO ASC, A.DVSN_2_NO ASC)-1 AS INDEX,
+		A.AVAIL, A.DVSN_1_NO::TEXT AS DVSN_A,A.DVSN_2_NO::TEXT AS DVSN_B, B.DVSN_2_NM, 'unicon-'||ICON_TYPE||'-'||ICON_COLOR||'-fill' AS UNICON
+		, BASE AS TYPE
+		FROM CAMPAIGN_MEDIA A
+		JOIN BASE_TYPE B ON A.DVSN_1_NO = B.DVSN_1_NO AND A.DVSN_2_NO = B.DVSN_2_NO
+		WHERE C_NO = (SELECT C_NO FROM CAMPAIGN WHERE C_CTXT = #{cid})
+		AND A.IS_MEDIA = 'media'
+		AND B.IS_MEDIA = 'media'
+		GROUP BY A.AVAIL, A.DVSN_1_NO, A.DVSN_2_NO, ICON_TYPE, ICON_COLOR, B.BASE, B.DVSN_2_NM
+	</select>
+	
+	<select id="selectCampaignMediaListItem" parameterType="EgovMap" resultType="EgovMap">
+		SELECT GID, QUANTITY AS QUANT FROM CAMPAIGN_MEDIA 
+		WHERE C_NO = (SELECT C_NO FROM CAMPAIGN WHERE C_CTXT = #{cid})
+		AND DVSN_1_NO = ${dvsnA}
+		AND DVSN_2_NO = ${dvsnB}
+	</select>
+	
+	<select id="selectCampaignPackageList" parameterType="EgovMap" resultType="string">
+		SELECT PKG_ID FROM CAMPAIGN_PACKAGE
+		WHERE C_NO = (SELECT C_NO FROM CAMPAIGN WHERE C_CTXT = #{cid})
+		AND DVSN_1_NO = ${dvsnA}
+		AND DVSN_2_NO = ${dvsnB}
+	</select>
+	
+	<select id="selectAppCampaignInfo" parameterType="EgovMap" resultType="EgovMap">
+		SELECT 
+			C_TIT AS CPN,
+			C_ADVR AS ADV,
+			TO_CHAR(S_DT, 'YYYY.MM.DD')||' - '||TO_CHAR(E_DT, 'YYYY.MM.DD') AS TRM,
+			SUBSTR(T_AG,1,2)::TEXT as MINAG,
+			SUBSTR(T_AG,3,4)::TEXT as MAXAG,
+			T_GNDR AS CPT
+		 FROM 
+		 	CAMPAIGN WHERE C_CTXT = #{cid}
+		 LIMIT 1
+	</select>
+	
+	<select id="selectMediaMixInfo" parameterType="EgovMap" resultType="EgovMap">
+		SELECT 
+			C_TIT AS CPN,
+			C_ADVR AS ADV,
+			TO_CHAR(S_DT, 'YYYY.MM.DD')||' - '||TO_CHAR(E_DT, 'YYYY.MM.DD') AS TRM,
+			SUBSTR(T_AG,1,2)::TEXT as MINAG,
+			SUBSTR(T_AG,3,4)::TEXT as MAXAG,
+			T_GNDR AS CPT
+		 FROM 
+		 	CAMPAIGN WHERE C_CTXT = #{cid}
+		 LIMIT 1
+	</select>
+	
+	<select id="selectSchedulLastDate" parameterType="EgovMap" resultType="string">
+		<if test="table.equals('cardSubway')">
+			SELECT COALESCE(TO_CHAR(TO_DATE(MAX(USE_DT),'YYYYMMDD')+1,'YYYYMMDD'), '20190101') FROM CARD_SUBWAY_STATISTICS
+		</if>
+		<if test="table.equals('localPeople')">
+			SELECT COALESCE(TO_CHAR(TO_DATE(MAX(STD_DATE),'YYYYMMDD')+1,'YYYYMMDD'), '20190101') FROM LOCAL_PEOPLE_DONG_TMP
+		</if>
+		<if test="table.equals('localPeopleJGG')">
+			SELECT COALESCE(TO_CHAR(TO_DATE(MAX(STD_DATE),'YYYYMMDD')+1,'YYMMDD'), '190101') FROM LOCAL_PEOPLE
+		</if>
+	</select>
+	
+	<insert id="insertCardSubwayStatisticsData" parameterType="EgovMap">
+		INSERT INTO CARD_SUBWAY_STATISTICS
+		SELECT USE_DT, LINE_NUM, SUB_STA_NM, SUM(RIDE_PASGR_NUM), SUM(ALIGHT_PASGR_NUM), MAX(WORK_DT)
+		FROM CARD_SUBWAY_TMP
+		GROUP BY USE_DT, LINE_NUM, SUB_STA_NM
+		ORDER BY USE_DT, LINE_NUM, SUB_STA_NM
+	</insert>
+	
+	<insert id="insertCardSubwayTmpData" parameterType="EgovMap">
+		INSERT INTO CARD_SUBWAY_TMP 
+		VALUES(
+		#{useDt}, 
+		#{lineNum}, 
+		#{subStaNm}, 
+		#{ridePasgrNum}::NUMERIC, 
+		#{alightPasgrNum}::NUMERIC,
+		#{workDt})
+	</insert>
+	
+	<insert id="insertLocalPeopleTmpData" parameterType="EgovMap">
+		INSERT INTO LOCAL_PEOPLE_DONG_TMP 
+		VALUES(
+		#{stdrDeId}, 
+		#{tmzonPdSe}, 
+		#{adstrdCodeSe}, 
+		${totLvpopCo}, 
+		${m0009},
+		${m1014},
+		${m1519},
+		${m2024},
+		${m2529},
+		${m3034},
+		${m3539},
+		${m4044},
+		${m4549},
+		${m5054},
+		${m5559},
+		${m6064},
+		${m6569},
+		${m7074},
+		${f0009},
+		${f1014},
+		${f1519},
+		${f2024},
+		${f2529},
+		${f3034},
+		${f3539},
+		${f4044},
+		${f4549},
+		${f5054},
+		${f5559},
+		${f6064},
+		${f6569},
+		${f7074})
+	</insert>
+	
+	<insert id="insertLocalPeopleHjdData" parameterType="EgovMap">
+		INSERT INTO LOCAL_PEOPLE_DONG
+		SELECT STD_DATE, PTIME, HDJ_CD, SUM(TOT)::text,
+		SUM(M0)::text as M0 , SUM(M10)::text as M10, SUM(M15)::text as M15, SUM(M20)::text as M20, SUM(M25)::text as M25, SUM(M30)::text as M30, SUM(M35)::text as M35, SUM(M40)::text as M40, SUM(M45)::text as M45, SUM(M50)::text as M50, SUM(M55)::text as M55, SUM(M60)::text as M60, SUM(M65)::text as M65, SUM(M70)::text as M70,
+		SUM(F0)::text as F0 , SUM(F10)::text as F10, SUM(F15)::text as F15, SUM(F20)::text as F20, SUM(F25)::text as F25, SUM(F30)::text as F30, SUM(F35)::text as F35, SUM(F40)::text as F40, SUM(F45)::text as F45, SUM(F50)::text as F50, SUM(F55)::text as F55, SUM(F60)::text as F60, SUM(F65)::text as F65, SUM(F70)::text as F70
+		FROM LOCAL_PEOPLE_DONG_TMP
+		GROUP BY STD_DATE, PTIME, HDJ_CD
+		ORDER BY STD_DATE, PTIME, HDJ_CD
+	</insert>
+	
+	<delete id="deleteCardSubwayTmpData" parameterType="EgovMap">
+		DELETE FROM CARD_SUBWAY_TMP
+	</delete>
+	
+	<delete id="deleteLocalPeopleTmpData" parameterType="EgovMap">
+		DELETE FROM LOCAL_PEOPLE_DONG_TMP
+	</delete>
+	
+	<insert id="insertScheduledLog" parameterType="EgovMap">
+		<if test="table.equals('cardSubway')">
+			INSERT INTO scheduled_log(
+				use_dt,
+				work_dt,
+				size,
+				list_total_count,
+				code,
+				message,
+				menu
+			)VALUES(
+				#{useDt},
+				#{workDt},
+				#{size},
+				#{listTotCnt}::integer,
+				#{code},
+				#{message},
+				#{table}
+			);
+		</if>
+		<if test="table.equals('localPeople')">
+			INSERT INTO scheduled_log(
+				use_dt,
+				work_dt,
+				size,
+				list_total_count,
+				code,
+				message,
+				menu
+			)VALUES(
+				#{useDt},
+				to_char(now(),'YYYYMMDD'),
+				#{size},
+				#{listTotCnt}::integer,
+				#{code},
+				#{message},
+				#{table}
+			);
+		</if>
+	</insert>
+	
+	<select id="selectApiInfo" parameterType="EgovMap" resultType="EgovMap">
+		select api_url, api_key, api_service, api_type, api_name as table from api_info where api_name = #{table}
+	</select>
+	
+	<select id="selectMediaPopupImgList" parameterType="EgovMap" resultType="EgovMap">
+		SELECT FILE_ORG_NAME, FILE_SVR_NAME, IS_BLUEPRINT FROM (
+		<foreach collection="gidList" item="gid" open="" separator=" UNION ALL " close="">
+			SELECT POPUP_IMG_NO, FILE_ORG_NAME, FILE_SVR_NAME, IS_BLUEPRINT FROM (
+				SELECT * FROM POPUP_IMG 
+				WHERE DVSN_1_NO = ${d1} 
+				AND DVSN_2_NO = ${d2}
+				AND GID = ${gid}
+				AND (FILE_ORG_NAME IS NOT NULL AND FILE_ORG_NAME <![CDATA[<>]]> '')
+				ORDER BY POPUP_IMG_NO DESC
+				LIMIT 3
+			)F
+		</foreach>
+		) X
+		GROUP BY FILE_ORG_NAME, FILE_SVR_NAME, IS_BLUEPRINT 
+		ORDER BY IS_BLUEPRINT DESC
+	</select>
+	
+	<select id="selectMediaPackageList" parameterType="EgovMap" resultType="EgovMap">
+		SELECT
+			A.PKG_ID, A.PKG_NM,
+		<if test='base.equals("gdia")'>
+			SUM(C.QUANTITY) AS PANEL_CNT,
+		</if>
+		<if test='base.equals("mediaboard")'>
+			SUM(C.PANEL_CNT) AS PANEL_CNT,
+		</if>
+		<if test='base.equals("townboard")'>
+			SUM(C.PANEL_CNT) AS PANEL_CNT,
+		</if>
+			P.AD_PRICE_MONTH
+		FROM PKG A
+		JOIN PKG_PRICE P ON A.PKG_ID = P.PKG_ID
+		JOIN PKG_MEDIA B ON A.PKG_ID = B.PKG_ID
+		JOIN ${base} C ON B.GID = C.GID
+		WHERE A.TYPE = C.TYPE
+		GROUP BY A.PKG_ID, P.AD_PRICE_MONTH
+		ORDER BY PKG_ORDER ASC
+	</select>
+	
+	<select id="selectLastDate" resultType="EgovMap">
+		SELECT A.LAST_DATE FROM 
+		(SELECT PDATE AS LAST_DATE, COUNT(PDATE) AS CNT FROM BASE_DATA_TMP GROUP BY PDATE ORDER BY PDATE DESC LIMIT 365)A
+		JOIN (
+		SELECT USE_DT AS LAST_DATE, COUNT(USE_DT) AS CNT FROM CARD_SUBWAY_STATISTICS GROUP BY USE_DT ORDER BY USE_DT DESC LIMIT 365
+		) B ON A.LAST_DATE = B.LAST_DATE
+		LIMIT 1
+	</select>
+	
+	<select id="selectCampaignMap" parameterType="EgovMap" resultType="EgovMap">
+		SELECT A.C_CTXT AS C_CTXT, FILE_ORG_NAME, FILE_SVR_NAME, B.C_TIT AS C_TIT FROM CAMPAIGN_MAP AS A, CAMPAIGN AS B WHERE CAMPAIGN_MAP_NO = (
+		SELECT MAX(CAMPAIGN_MAP_NO)
+		FROM CAMPAIGN_MAP
+		WHERE FILE_ORG_NAME = #{fileName})
+		AND A.C_CTXT = B.C_CTXT
+	</select>
+	
+</mapper>

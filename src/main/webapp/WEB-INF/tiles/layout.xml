@@ -1,0 +1,111 @@
+<!DOCTYPE tiles-definitions PUBLIC
+  "-//Apache Software Foundation//DTD Tiles Configuration 3.0//EN"
+  "http://tiles.apache.org/dtds/tiles-config_3_0.dtd">
+
+<tiles-definitions>
+
+	<definition name="tpmf" template="/WEB-INF/layout/main/full.jsp">
+		<put-attribute name="css" value="/WEB-INF/layout/main/css.jsp" />
+		<put-attribute name="header" value="/WEB-INF/layout/main/header.jsp" />
+		<put-attribute name="footer" value="/WEB-INF/layout/main/footer.jsp" />
+		<put-attribute name="manual" value="/WEB-INF/layout/main/manual.jsp" />
+		<put-attribute name="js" value="/WEB-INF/layout/main/js.jsp" />
+	</definition>
+
+	<definition name="tpmc" template="/WEB-INF/layout/main/clean.jsp">
+		<put-attribute name="css" value="/WEB-INF/layout/main/css.jsp" />
+		<put-attribute name="js" value="/WEB-INF/layout/main/js.jsp" />
+	</definition>
+
+	<definition name="tpaf" template="/WEB-INF/layout/admin/full.jsp">
+		<put-attribute name="css" value="/WEB-INF/layout/admin/css.jsp" />
+		<put-attribute name="header" value="/WEB-INF/layout/admin/header.jsp" />
+		<put-attribute name="lnb" value="/WEB-INF/layout/admin/lnb.jsp" />
+		<put-attribute name="footer" value="/WEB-INF/layout/admin/footer.jsp" />
+		<put-attribute name="js" value="/WEB-INF/layout/admin/js.jsp" />
+	</definition>
+
+	<definition name="tpac" template="/WEB-INF/layout/admin/clean.jsp">
+		<put-attribute name="css" value="/WEB-INF/layout/admin/css.jsp" />
+		<put-attribute name="js" value="/WEB-INF/layout/admin/js.jsp" />
+	</definition>
+	
+	<definition name="tpif" template="/WEB-INF/layout/index/full.jsp">
+		<put-attribute name="css" value="/WEB-INF/layout/index/css.jsp" />
+		<put-attribute name="header" value="/WEB-INF/layout/index/header.jsp" />
+		<put-attribute name="footer" value="/WEB-INF/layout/index/footer.jsp" />
+		<put-attribute name="js" value="/WEB-INF/layout/index/js.jsp" />
+	</definition>
+	
+	<definition name="tpc" template="/WEB-INF/layout/clean.jsp">
+	</definition>
+
+	<definition name="main/c/*" extends="tpmc">
+		<put-attribute name="body" value="/WEB-INF/views/main/{1}.jsp" />
+	</definition>
+
+	<definition name="main/c/*/*" extends="tpmc">
+		<put-attribute name="body" value="/WEB-INF/views/main/{1}/{2}.jsp" />
+	</definition>
+
+	<definition name="main/c/*/*/*" extends="tpmc">
+		<put-attribute name="body"
+			value="/WEB-INF/views/main/{1}/{2}/{3}.jsp" />
+	</definition>
+
+	<definition name="main/*" extends="tpmf">
+		<put-attribute name="body" value="/WEB-INF/views/main/{1}.jsp" />
+	</definition>
+
+	<definition name="main/*/*" extends="tpmf">
+		<put-attribute name="body" value="/WEB-INF/views/main/{1}/{2}.jsp" />
+	</definition>
+
+	<definition name="main/*/*/*" extends="tpmf">
+		<put-attribute name="body"
+			value="/WEB-INF/views/main/{1}/{2}/{3}.jsp" />
+	</definition>
+
+	<definition name="admin/c/*" extends="tpac">
+		<put-attribute name="body" value="/WEB-INF/views/admin/{1}.jsp" />
+	</definition>
+
+	<definition name="admin/c/*/*" extends="tpac">
+		<put-attribute name="body" value="/WEB-INF/views/admin/{1}/{2}.jsp" />
+	</definition>
+
+	<definition name="admin/c/*/*/*" extends="tpac">
+		<put-attribute name="body"
+			value="/WEB-INF/views/admin/{1}/{2}/{3}.jsp" />
+	</definition>
+
+	<definition name="admin/*" extends="tpaf">
+		<put-attribute name="body" value="/WEB-INF/views/admin/{1}.jsp" />
+	</definition>
+
+	<definition name="admin/*/*" extends="tpaf">
+		<put-attribute name="body" value="/WEB-INF/views/admin/{1}/{2}.jsp" />
+	</definition>
+
+	<definition name="admin/*/*/*" extends="tpaf">
+		<put-attribute name="body"
+			value="/WEB-INF/views/admin/{1}/{2}/{3}.jsp" />
+	</definition>
+	
+	<definition name="index" extends="tpif">
+		<put-attribute name="body"
+			value="/WEB-INF/views/index/index.jsp" />
+	</definition>
+	
+	<definition name="loginSuccess" extends="tpif">
+		<put-attribute name="body"
+			value="/WEB-INF/views/index/loginSuccess.jsp" />
+	</definition>
+
+	<definition name="mail" extends="tpc">
+		<put-attribute name="body"
+			value="/WEB-INF/views/mail.jsp" />
+	</definition>
+	
+	<definition name="error/*" template="/WEB-INF/views/error/{1}.jsp">	</definition>
+</tiles-definitions>

@@ -1,0 +1,92 @@
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:mvc="http://www.springframework.org/schema/mvc"
+	xmlns:p="http://www.springframework.org/schema/p"
+	xmlns:tx="http://www.springframework.org/schema/tx"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:task="http://www.springframework.org/schema/task"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-4.0.xsd
+						http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-4.0.xsd
+						http://www.springframework.org/schema/mvc http://www.springframework.org/schema/mvc/spring-mvc-4.0.xsd
+						http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx.xsd
+						http://www.springframework.org/schema/task
+						http://www.springframework.org/schema/task/spring-task-4.0.xsd">
+	
+	
+	<!-- 리소스 폴더 지정 -->
+	<mvc:resources location="/resources/**" mapping="/resources/"/>
+	
+	
+	<context:component-scan base-package="datarget">
+		<context:include-filter expression="org.springframework.stereotype.Controller" type="annotation"/>
+		<context:exclude-filter expression="org.springframework.stereotype.Service" type="annotation"/>
+		<context:exclude-filter expression="org.springframework.stereotype.Repository" type="annotation"/>
+	</context:component-scan>
+	
+	<task:annotation-driven/>
+	
+	<bean id="jsonView" class="org.springframework.web.servlet.view.json.MappingJackson2JsonView">
+		<property name="contentType" value="text/html;charset=UTF-8"/>
+	</bean>
+	
+	<!-- Transaction: 반드시 DispatcherServlet 설정 파일에 위치 -->
+	<tx:annotation-driven proxy-target-class="true"/>
+	
+	
+	<!-- For Pagination Tag -->
+	<bean class="datarget.egov.cmm.ImagePaginationRenderer" id="imageRenderer"/>
+	
+	
+	<bean class="egovframework.rte.ptl.mvc.tags.ui.pagination.DefaultPaginationManager" id="paginationManager">
+		<property name="rendererType">
+			<map>
+				<entry key="image" value-ref="imageRenderer"/>
+				<entry key="text" value-ref="textRenderer"/>
+			</map>
+		</property>
+	</bean>
+	
+	
+	
+	<bean class="org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerAdapter">
+		<property name="webBindingInitializer">
+			<bean class="datarget.egov.cmm.web.EgovBindingInitializer" />
+		</property>
+	</bean>
+	
+	
+	
+	<bean class="org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping"/>
+	
+	
+	
+	<bean class="datarget.sys.cmm.CustomSimpleMappingExceptionResolver">
+		<property name="defaultErrorView" value="error/error-default"/>
+		<property name="exceptionMappings">
+			<props>
+				<prop key="org.springframework.dao.DataAccessException">error/dataAccess</prop>
+			</props>
+		</property>
+	</bean>
+	
+	<!-- for JFile -->
+	<bean class="org.springframework.web.servlet.view.BeanNameViewResolver" p:order="0"/>
+	<bean id="downloadView" class="datarget.sys.admin.DownloadView" />
+	 <!-- tiles 적용-->
+	<bean id="tilesConfigurer"  class="org.springframework.web.servlet.view.tiles3.TilesConfigurer">
+		<property name="definitions">
+			<list>
+				<value>/WEB-INF/tiles/layout.xml</value>
+			</list>
+		</property>
+		<property name="preparerFactoryClass" value="org.springframework.web.servlet.view.tiles3.SpringBeanPreparerFactory" />
+	</bean>
+	
+	<bean id="viewResolver" class="org.springframework.web.servlet.view.UrlBasedViewResolver">
+		<property name="viewClass" value="org.springframework.web.servlet.view.tiles3.TilesView" />
+	</bean>
+
+	<context:component-scan base-package="datarget.*" />
+	<mvc:default-servlet-handler/>	
+	
+</beans>

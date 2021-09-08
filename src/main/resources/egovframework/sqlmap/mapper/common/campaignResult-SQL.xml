@@ -1,0 +1,604 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="campaignResult">
+	
+	<select id="selectResultOts" parameterType="EgovMap" resultType="EgovMap">
+		<![CDATA[
+			SELECT 
+				sum(vw_media_ots.tot) as total_ots
+			]]>
+				<foreach collection="targetList" item="t" open=",SUM(" close=") as target_ots" separator="+">
+				vw_media_ots.${t}
+				</foreach>
+			<![CDATA[
+    			FROM campaign, campaign_media , base_type, vw_media_ots  
+        			WHERE
+            			campaign.c_no = campaign_media.c_no AND
+            			campaign.c_ctxt = #{cid} AND
+            			base_type.is_media = campaign_media.is_media AND
+            			base_type.dvsn_1_no = campaign_media.dvsn_1_no AND
+            			base_type.dvsn_2_no = campaign_media.dvsn_2_no AND 
+            			vw_media_ots.type = base_type.base AND
+            			vw_media_ots.m_id::integer = campaign_media.gid;
+		]]>					
+	</select>
+	
+	<select id="selectStatistics" parameterType="EgovMap" resultType="EgovMap">
+		SELECT PDATE, ROUND(SUM(TARGET_OTS)::NUMERIC,2) AS TARGET_OTS, ROUND(SUM(TOTAL_OTS)::NUMERIC,2) AS TOTAL_OTS FROM (
+		SELECT HD.PDATE,
+		SUM(TARGET / HP.ADM_CNT::NUMERIC / 2::NUMERIC + TARGET / HP.REG_CNT::NUMERIC / 2::NUMERIC) AS TARGET_OTS,
+		SUM(TOTAL / HP.ADM_CNT::NUMERIC / 2::NUMERIC + TOTAL / HP.REG_CNT::NUMERIC / 2::NUMERIC) AS TOTAL_OTS
+		FROM BASE_HEATPOINT HP
+		LEFT JOIN (SELECT PDATE, REG_CD<foreach collection="targetList" item="t" open=",SUM(" close=") as target" separator="+">${t}</foreach>, SUM(TOT) AS TOTAL FROM BASE_DATA_TMP WHERE <![CDATA[ PDATE >= #{stdt} AND PDATE <= #{eddt} ]]> GROUP BY PDATE, REG_CD) HD ON HP.REG_CD::TEXT = HD.REG_CD::TEXT
+		JOIN (SELECT TYPE, GID, HP_ID FROM MEDIA_CONTAINS C WHERE (TYPE, GID) IN (SELECT B.BASE, A.GID FROM CAMPAIGN_MEDIA A JOIN BASE_TYPE B ON A.DVSN_1_NO = B.DVSN_1_NO AND A.DVSN_2_NO = B.DVSN_2_NO AND A.IS_MEDIA = B.IS_MEDIA
+		WHERE A.C_NO = (SELECT C_NO FROM CAMPAIGN WHERE C_CTXT = #{ctxt}) AND A.DVSN_1_NO = 1)) CC ON CC.HP_ID = HP.ID
+		GROUP BY HD.PDATE
+		UNION ALL
+		SELECT USE_DT, SUM(COALESCE(RIDE_PASGR_NUM,0)+COALESCE(ALIGHT_PASGR_NUM,0)) AS PASGR_NUM, SUM(COALESCE(RIDE_PASGR_NUM,0)+COALESCE(ALIGHT_PASGR_NUM,0)) AS PASGR_NUM FROM CARD_SUBWAY_STATISTICS CS,
+        (SELECT GID, LINE, METRO_CD, STATION_NM FROM GDIA WHERE ( TYPE, GID ) IN (SELECT B.BASE, A.GID FROM CAMPAIGN_MEDIA A 
+		JOIN BASE_TYPE B ON A.DVSN_1_NO = B.DVSN_1_NO AND A.DVSN_2_NO = B.DVSN_2_NO AND A.IS_MEDIA = B.IS_MEDIA 
+		WHERE A.C_NO = (SELECT C_NO FROM campAIGN WHERE C_CTXT = #{ctxt} ))) GI
+        WHERE  <![CDATA[ USE_DT >= #{stdt} AND USE_DT <= #{eddt} ]]>
+        AND LINE_NUM = GI.LINE AND SUB_STA_NM = GI.STATION_NM
+        GROUP  BY USE_DT 
+		UNION ALL
+		SELECT USE_DT, SUM(COALESCE(RIDE_PASGR_NUM,0)+COALESCE(ALIGHT_PASGR_NUM,0)) AS PASGR_NUM, SUM(COALESCE(RIDE_PASGR_NUM,0)+COALESCE(ALIGHT_PASGR_NUM,0)) AS PASGR_NUM FROM CARD_SUBWAY_STATISTICS CS, 
+		(SELECT line, psd_metro FROM PSD WHERE  ( TYPE, GID ) IN (SELECT B.BASE, A.GID FROM CAMPAIGN_MEDIA A
+        JOIN BASE_TYPE B ON A.DVSN_1_NO = B.DVSN_1_NO AND A.DVSN_2_NO = B.DVSN_2_NO AND A.IS_MEDIA = B.IS_MEDIA 
+		WHERE A.C_NO = (SELECT C_NO FROM CAMPAIGN WHERE  c_ctxt = #{ctxt} ))) GI
+	    WHERE <![CDATA[ USE_DT >= #{stdt} AND USE_DT <= #{eddt} ]]>
+	    AND LINE_NUM = GI.LINE AND SUB_STA_NM = GI.PSD_METRO 
+		GROUP BY USE_DT
+		UNION ALL
+		SELECT PDATE, SUM(TARGET_OTS) AS TARGET_OTS, SUM(TOTAL_OTS) AS TOTAL_OTS FROM(
+		SELECT HD.PDATE,
+		SUM(TARGET / HP.ADM_CNT::NUMERIC / 2::NUMERIC + TARGET / HP.REG_CNT::NUMERIC / 2::NUMERIC)*X.WEIGHT AS TARGET_OTS,
+		SUM(TOTAL / HP.ADM_CNT::NUMERIC / 2::NUMERIC + TOTAL / HP.REG_CNT::NUMERIC / 2::NUMERIC)*X.WEIGHT AS TOTAL_OTS
+		FROM BASE_HEATPOINT HP
+		LEFT JOIN (SELECT PDATE, REG_CD<foreach collection="targetList" item="t" open=",SUM(" close=") as target" separator="+">${t}</foreach>, SUM(TOT) AS TOTAL FROM BASE_DATA_TMP WHERE <![CDATA[ PDATE >= #{stdt} AND PDATE <= #{eddt} ]]> GROUP BY PDATE, REG_CD) HD ON HP.REG_CD::TEXT = HD.REG_CD::TEXT
+		JOIN (SELECT TYPE, GID, HP_ID FROM MEDIA_CONTAINS C WHERE (TYPE, GID) IN (SELECT B.BASE, A.GID FROM CAMPAIGN_MEDIA A JOIN BASE_TYPE B ON A.DVSN_1_NO = B.DVSN_1_NO AND A.DVSN_2_NO = B.DVSN_2_NO AND A.IS_MEDIA = B.IS_MEDIA
+		WHERE A.C_NO = (SELECT C_NO FROM CAMPAIGN WHERE C_CTXT = #{ctxt}) AND A.DVSN_1_NO = 3)) CC ON CC.HP_ID = HP.ID
+		JOIN BUS X ON CC.GID = X.GID
+		GROUP BY HD.PDATE,X.WEIGHT)Z
+		GROUP BY PDATE
+		UNION ALL
+		SELECT A.USE_DT, B.OTS AS TARGET_OTS, B.OTS AS TOTAL_OTS FROM CARD_SUBWAY_STATISTICS A
+		CROSS JOIN (SELECT HOUSEHOLDS_CNT * AVG_HOUSEHOLDS * WEIGHT AS OTS FROM TOWNBOARD WHERE (TYPE,GID) IN (SELECT B.BASE, A.GID FROM CAMPAIGN_MEDIA A 
+		JOIN BASE_TYPE B ON A.DVSN_1_NO = B.DVSN_1_NO AND A.DVSN_2_NO = B.DVSN_2_NO AND A.IS_MEDIA = B.IS_MEDIA 
+		WHERE A.C_NO = (SELECT C_NO FROM CAMPAIGN WHERE C_CTXT = #{ctxt})))B
+		WHERE <![CDATA[ USE_DT >= #{stdt} AND USE_DT <= #{eddt} ]]> GROUP BY USE_DT, OTS
+		UNION ALL
+		SELECT PDATE, SUM(TARGET_OTS) AS TARGET_OTS, SUM(TOTAL_OTS) AS TOTAL_OTS FROM(
+		SELECT HD.PDATE,
+		SUM(TARGET / HP.ADM_CNT::NUMERIC / 2::NUMERIC + TARGET / HP.REG_CNT::NUMERIC / 2::NUMERIC)*X.WEIGHT AS TARGET_OTS,
+		SUM(TOTAL / HP.ADM_CNT::NUMERIC / 2::NUMERIC + TOTAL / HP.REG_CNT::NUMERIC / 2::NUMERIC)*X.WEIGHT AS TOTAL_OTS
+		FROM BASE_HEATPOINT HP
+		LEFT JOIN (SELECT PDATE, REG_CD<foreach collection="targetList" item="t" open=",SUM(" close=") as target" separator="+">${t}</foreach>, SUM(TOT) AS TOTAL FROM BASE_DATA_TMP WHERE <![CDATA[ PDATE >= #{stdt} AND PDATE <= #{eddt} ]]> GROUP BY PDATE, REG_CD) HD ON HP.REG_CD::TEXT = HD.REG_CD::TEXT
+		JOIN (SELECT TYPE, GID, HP_ID FROM MEDIA_CONTAINS C WHERE (TYPE, GID) IN (SELECT B.BASE, A.GID FROM CAMPAIGN_MEDIA A JOIN BASE_TYPE B ON A.DVSN_1_NO = B.DVSN_1_NO AND A.DVSN_2_NO = B.DVSN_2_NO AND A.IS_MEDIA = B.IS_MEDIA
+		WHERE A.C_NO = (SELECT C_NO FROM CAMPAIGN WHERE C_CTXT = #{ctxt}) AND A.DVSN_1_NO = 5 AND A.DVSN_2_NO = 1)) CC ON CC.HP_ID = HP.ID
+		JOIN E_DISPLAY X ON CC.GID = X.GID
+		GROUP BY HD.PDATE,X.WEIGHT)Z
+		GROUP BY PDATE
+		UNION ALL
+		SELECT HD.PDATE,
+		SUM(TARGET / HP.ADM_CNT::NUMERIC / 2::NUMERIC + TARGET / HP.REG_CNT::NUMERIC / 2::NUMERIC) AS TARGET_OTS,
+		SUM(TOTAL / HP.ADM_CNT::NUMERIC / 2::NUMERIC + TOTAL / HP.REG_CNT::NUMERIC / 2::NUMERIC) AS TOTAL_OTS
+		FROM BASE_HEATPOINT HP
+		LEFT JOIN (SELECT PDATE, REG_CD<foreach collection="targetList" item="t" open=",SUM(" close=") as target" separator="+">${t}</foreach>, SUM(TOT) AS TOTAL FROM BASE_DATA_TMP WHERE <![CDATA[ PDATE >= #{stdt} AND PDATE <= #{eddt} ]]> GROUP BY PDATE, REG_CD) HD ON HP.REG_CD::TEXT = HD.REG_CD::TEXT
+		JOIN (SELECT TYPE, GID, HP_ID FROM MEDIA_CONTAINS C WHERE (TYPE, GID) IN (SELECT B.BASE, A.GID FROM CAMPAIGN_MEDIA A JOIN BASE_TYPE B ON A.DVSN_1_NO = B.DVSN_1_NO AND A.DVSN_2_NO = B.DVSN_2_NO AND A.IS_MEDIA = B.IS_MEDIA
+		WHERE A.C_NO = (SELECT C_NO FROM CAMPAIGN WHERE C_CTXT = #{ctxt}) AND A.DVSN_1_NO = 5 AND A.DVSN_2_NO IN (2,3))) CC ON CC.HP_ID = HP.ID
+		GROUP BY HD.PDATE
+		) ZZ
+		GROUP BY PDATE
+		ORDER BY PDATE
+	</select>
+	
+	<select id="selectStatTable" parameterType="EgovMap" resultType="EgovMap">
+		SELECT dvsn_1_nm, dvsn_2_nm, media_id, address, ad_price_month, round(target_ots_info::NUMERIC,2) AS target_ots_info, round(total_ots_info::NUMERIC,2) AS total_ots_info, to_char(to_date(#{stdt},'YYYYMMDD'),'YYYY/MM/DD') AS s_date, to_char(to_date(#{eddt},'YYYYMMDD'),'YYYY/MM/DD') AS e_date FROM SHELTER sh, (
+			SELECT cc.dvsn_1_no, cc.dvsn_2_no, cc.gid, 
+			       SUM(target / hp.adm_cnt :: NUMERIC / 2 :: NUMERIC + target / hp.reg_cnt :: NUMERIC / 2 :: NUMERIC) AS target_ots_info, 
+			       SUM(total / hp.adm_cnt :: NUMERIC / 2 :: NUMERIC + total / hp.reg_cnt :: NUMERIC / 2 :: NUMERIC) AS total_ots_info 
+			FROM   base_heatpoint hp 
+			       left join (SELECT pdate, reg_cd
+						 <foreach collection="targetList" item="t" open=",SUM(" close=") as target" separator="+">${t}</foreach>, 
+						 SUM(tot)       AS total 
+					  FROM   base_data_tmp 
+					  WHERE  <![CDATA[ PDATE >= #{stdt} AND PDATE <= #{eddt} ]]>
+					  GROUP  BY pdate, reg_cd) hd 
+				      ON hp.reg_cd :: text = hd.reg_cd :: text 
+			       join (SELECT dvsn_1_no, dvsn_2_no, gid, hp_id 
+				     FROM   media_contains c 
+				     WHERE  ( dvsn_1_no, dvsn_2_no, gid ) IN (SELECT a.dvsn_1_no, a.dvsn_2_no, a.gid 
+							      FROM   campaign_media a 
+								     join base_type b 
+								       ON a.dvsn_1_no = b.dvsn_1_no 
+									  AND a.dvsn_2_no = b.dvsn_2_no 
+									  AND a.is_media = b.is_media 
+							      WHERE  a.c_no = (SELECT c_no 
+									       FROM   campaign 
+									       WHERE  c_ctxt = #{ctxt}) AND a.dvsn_1_no = 1)) cc 
+				 ON cc.hp_id = hp.id 
+			GROUP  BY cc.dvsn_1_no, cc.dvsn_2_no, cc.gid) tb_sh, base_type bt WHERE sh.dvsn_1_no = tb_sh.dvsn_1_no AND sh.dvsn_2_no = tb_sh.dvsn_2_no and sh.gid = tb_sh.gid and bt.dvsn_1_no = sh.dvsn_1_no AND bt.dvsn_2_no = sh.dvsn_2_no and bt.is_media = 'media'
+			UNION ALL 
+			SELECT dvsn_1_nm, dvsn_2_nm, COALESCE((SELECT PKG_NM FROM PKG WHERE PKG_ID = (SELECT PKG_ID FROM CAMPAIGN_PACKAGE WHERE C_NO = (SELECT C_NO FROM CAMPAIGN WHERE  C_CTXT = #{ctxt}) 
+        			AND dvsn_1_no = 2 AND dvsn_2_no = 2 )), media_type) AS media_id, line||' '||station_nm as address, ad_price_month, target_ots_info, total_ots_info, to_char(to_date(#{stdt},'YYYYMMDD'),'YYYY/MM/DD') AS s_date, to_char(to_date(#{eddt},'YYYYMMDD'),'YYYY/MM/DD') AS e_date FROM gdia, (
+			SELECT gi.dvsn_1_no, gi.dvsn_2_no, gid, 
+			       SUM(Coalesce(ride_pasgr_num, 0) + Coalesce(alight_pasgr_num, 0)) AS target_ots_info, 
+			       SUM(Coalesce(ride_pasgr_num, 0) + Coalesce(alight_pasgr_num, 0)) AS total_ots_info 
+			FROM   card_subway_statistics cs, 
+			       (SELECT dvsn_1_no, dvsn_2_no,gid, line, station_nm 
+				FROM   (SELECT dvsn_1_no, dvsn_2_no, gid, line, metro_cd, station_nm 
+					FROM   gdia 
+					WHERE  ( dvsn_1_no, dvsn_2_no, gid ) IN (SELECT a.dvsn_1_no, a.dvsn_2_no, a.gid 
+								 FROM   campaign_media a 
+									join base_type b 
+									  ON a.dvsn_1_no = b.dvsn_1_no 
+									     AND a.dvsn_2_no = b.dvsn_2_no 
+									     AND a.is_media = b.is_media 
+								 WHERE a.c_no = (SELECT c_no 
+										 FROM   campaign 
+										 WHERE  c_ctxt = #{ctxt}))) aa) AS gi 
+			WHERE  <![CDATA[ use_dt >= #{stdt} AND use_dt <= #{eddt} ]]>
+			       AND line_num = gi.line 
+			       AND sub_sta_nm = gi.station_nm 
+			GROUP  BY gi.dvsn_1_no, gi.dvsn_2_no, gid ) sh, base_type bt WHERE gdia.dvsn_1_no = sh.dvsn_1_no AND gdia.dvsn_2_no = sh.dvsn_2_no and gdia.gid = sh.gid and gdia.dvsn_1_no = bt.dvsn_1_no AND gdia.dvsn_2_no = bt.dvsn_2_no and bt.is_media = 'media'
+			UNION ALL 
+			SELECT dvsn_1_nm, dvsn_2_nm, psd_no as media_id, line||' '||psd_metro as address, ad_price_month, target_ots_info, total_ots_info, to_char(to_date(#{stdt},'YYYYMMDD'),'YYYY/MM/DD') AS s_date, to_char(to_date(#{eddt},'YYYYMMDD'),'YYYY/MM/DD') AS e_date from psd, (
+			SELECT gi.dvsn_1_no, gi.dvsn_2_no, gid, 
+			       SUM(Coalesce(ride_pasgr_num, 0) + Coalesce(alight_pasgr_num, 0)) AS target_ots_info, 
+			       SUM(Coalesce(ride_pasgr_num, 0) + Coalesce(alight_pasgr_num, 0)) AS total_ots_info 
+			FROM   card_subway_statistics cs, 
+			       (SELECT dvsn_1_no, dvsn_2_no, gid, line, psd_metro 
+				FROM   (SELECT dvsn_1_no, dvsn_2_no, gid, line, metro_cd, psd_metro 
+					FROM   psd 
+					WHERE  ( dvsn_1_no, dvsn_2_no, gid ) IN (SELECT a.dvsn_1_no, a.dvsn_2_no, a.gid 
+								 FROM   campaign_media a 
+									join base_type b 
+									  ON a.dvsn_1_no = b.dvsn_1_no 
+									     AND a.dvsn_2_no = b.dvsn_2_no 
+									     AND a.is_media = b.is_media 
+								 WHERE a.c_no = (SELECT c_no 
+										 FROM   campaign 
+										 WHERE  c_ctxt = #{ctxt}))) aa) gi 
+			WHERE  <![CDATA[ use_dt >= #{stdt} AND use_dt <= #{eddt} ]]>
+			       AND line_num = gi.line 
+			       AND sub_sta_nm = gi.psd_metro 
+			GROUP  BY gi.dvsn_1_no, gi.dvsn_2_no, gid ) tb_psd, base_type bt WHERE psd.dvsn_1_no = tb_psd.dvsn_1_no AND psd.dvsn_2_no = tb_psd.dvsn_2_no and psd.gid = tb_psd.gid and psd.dvsn_1_no = bt.dvsn_1_no AND psd.dvsn_2_no = bt.dvsn_2_no and bt.is_media = 'media'
+			UNION ALL 
+			SELECT dvsn_1_nm, dvsn_2_nm, route_no as media_id, primary_route as address, ad_price_month, target_ots_info, total_ots_info, to_char(to_date(#{stdt},'YYYYMMDD'),'YYYY/MM/DD') AS s_date, to_char(to_date(#{eddt},'YYYYMMDD'),'YYYY/MM/DD') AS e_date from bus, (
+			SELECT dvsn_1_no, dvsn_2_no, gid, 
+			       ROUND(SUM(target_ots)::NUMERIC,2) AS target_ots_info, 
+			       ROUND(SUM(total_ots)::NUMERIC,2)  AS total_ots_info 
+			FROM   (SELECT dvsn_1_no, dvsn_2_no, cc.gid, 
+				       SUM(target / hp.adm_cnt :: NUMERIC / 2 :: NUMERIC + target / hp.reg_cnt :: NUMERIC / 2 :: NUMERIC) * x.weight AS target_ots, 
+				       SUM(total / hp.adm_cnt :: NUMERIC / 2 :: NUMERIC + total / hp.reg_cnt :: NUMERIC / 2 :: NUMERIC) * x.weight AS total_ots 
+				FROM   base_heatpoint hp 
+				       left join (SELECT pdate, reg_cd
+							 <foreach collection="targetList" item="t" open=",SUM(" close=") as target" separator="+">${t}</foreach>, 
+							 SUM(tot)       AS total 
+						  FROM   base_data_tmp 
+						  WHERE  <![CDATA[ PDATE >= #{stdt} AND PDATE <= #{eddt} ]]>
+						  GROUP  BY pdate, reg_cd) hd 
+					      ON hp.reg_cd :: text = hd.reg_cd :: text 
+				       join (SELECT TYPE, gid, hp_id 
+					     FROM   media_contains c 
+					     WHERE  ( TYPE, gid ) IN (SELECT b.base, a.gid 
+								      FROM   campaign_media a 
+									     join base_type b 
+									       ON a.dvsn_1_no = b.dvsn_1_no 
+										  AND a.dvsn_2_no = b.dvsn_2_no 
+										  AND a.is_media = b.is_media 
+								      WHERE a.c_no = (SELECT c_no 
+										      FROM   campaign 
+										      WHERE  c_ctxt = #{ctxt}) 
+									AND a.dvsn_1_no = 3)) cc 
+					 ON cc.hp_id = hp.id 
+				       join bus x ON cc.gid = x.gid 
+				GROUP  BY dvsn_1_no, dvsn_2_no, cc.gid, x.weight) z 
+			GROUP  BY dvsn_1_no, dvsn_2_no, gid ) tb_bus, base_type bt WHERE bus.dvsn_1_no = tb_bus.dvsn_1_no AND bus.dvsn_2_no = tb_bus.dvsn_2_no and bus.gid = tb_bus.gid and bus.dvsn_1_no = bt.dvsn_1_no AND bus.dvsn_2_no = bt.dvsn_2_no and bt.is_media = 'media'
+			UNION ALL 
+			SELECT dvsn_1_nm, dvsn_2_nm, 
+			COALESCE((SELECT pkg_nm FROM pkg WHERE pkg_id = (SELECT pkg_id FROM campaign_package WHERE c_no = (SELECT c_no FROM campaign WHERE  c_ctxt = #{ctxt}) AND dvsn_1_no = 4 AND dvsn_2_no = 2 )), APT_NM) as media_id
+       		, address, ad_price_month_1 as ad_price_month, round(sum(target_ots_info)::NUMERIC,2) as target_ots_info, round(sum(total_ots_info)::NUMERIC,2) as total_ots_info, to_char(to_date(#{stdt},'YYYYMMDD'),'YYYY/MM/DD') AS s_date, to_char(to_date(#{eddt},'YYYYMMDD'),'YYYY/MM/DD') AS e_date from townboard tb, (
+			SELECT dvsn_1_no, dvsn_2_no, gid, 
+			       b.ots AS target_ots_info, 
+			       b.ots AS total_ots_info 
+			FROM   card_subway_statistics a 
+			       cross join (SELECT dvsn_1_no, dvsn_2_no, gid, households_cnt * avg_households * weight AS ots
+					   FROM   townboard 
+					   WHERE  ( dvsn_1_no, dvsn_2_no, gid ) IN (SELECT a.dvsn_1_no, a.dvsn_2_no, a.gid 
+								    FROM   campaign_media a 
+									   join base_type b 
+									     ON a.dvsn_1_no = b.dvsn_1_no 
+										AND a.dvsn_2_no = b.dvsn_2_no 
+										AND a.is_media = b.is_media 
+								    WHERE a.c_no = (SELECT c_no 
+										    FROM   campaign 
+										    WHERE  c_ctxt = #{ctxt} )))b 
+			WHERE  <![CDATA[ use_dt >= #{stdt} AND use_dt <= #{eddt} ]]>
+			GROUP  BY use_dt, dvsn_1_no, dvsn_2_no, gid, ots) tb_tb, base_type bt WHERE tb.dvsn_1_no = tb_tb.dvsn_1_no AND tb.dvsn_2_no = tb_tb.dvsn_2_no and tb.gid = tb_tb.gid and tb.dvsn_1_no = bt.dvsn_1_no AND tb.dvsn_2_no = bt.dvsn_2_no and bt.is_media = 'media'
+			GROUP BY dvsn_1_nm, dvsn_2_nm, address, media_id, ad_price_month_1
+			UNION ALL
+			SELECT dvsn_1_nm, dvsn_2_nm, 
+			COALESCE((SELECT PKG_NM FROM PKG WHERE PKG_ID = (SELECT PKG_ID FROM CAMPAIGN_PACKAGE WHERE C_NO = (SELECT C_NO FROM CAMPAIGN WHERE  C_CTXT = #{ctxt}) AND dvsn_1_no = 4 AND dvsn_2_no = 1 )), cplx_nm) as media_id, address, ad_price_month, round(target_ots_info::NUMERIC,2) as target_ots_info, round(total_ots_info::NUMERIC,2) as total_ots_info, to_char(to_date(#{stdt},'YYYYMMDD'),'YYYY/MM/DD') AS s_date, to_char(to_date(#{eddt},'YYYYMMDD'),'YYYY/MM/DD') AS e_date from mediaboard mb, (
+			SELECT dvsn_1_no, dvsn_2_no, gid, 
+			       b.ots AS target_ots_info, 
+			       b.ots AS total_ots_info 
+			FROM   card_subway_statistics a 
+			       cross join (SELECT dvsn_1_no, dvsn_2_no, gid, households_cnt * avg_households * weight AS ots
+					   FROM   mediaboard 
+					   WHERE  ( dvsn_1_no, dvsn_2_no, gid ) IN (SELECT a.dvsn_1_no, a.dvsn_2_no, a.gid 
+								    FROM   campaign_media a 
+									   join base_type b 
+									     ON a.dvsn_1_no = b.dvsn_1_no 
+										AND a.dvsn_2_no = b.dvsn_2_no 
+										AND a.is_media = b.is_media 
+								    WHERE a.c_no = (SELECT c_no 
+										    FROM   campaign 
+										    WHERE  c_ctxt = #{ctxt} )))b 
+			WHERE  <![CDATA[ use_dt >= #{stdt} AND use_dt <= #{eddt} ]]>
+			GROUP  BY dvsn_1_no, dvsn_2_no, gid, ots) tb_mb, base_type bt WHERE mb.dvsn_1_no = tb_mb.dvsn_1_no AND mb.dvsn_2_no = tb_mb.dvsn_2_no and mb.gid = tb_mb.gid and mb.dvsn_1_no = bt.dvsn_1_no AND mb.dvsn_2_no = bt.dvsn_2_no and bt.is_media = 'media'
+			UNION ALL
+			SELECT dvsn_1_nm, dvsn_2_nm, name as media_id, address, ad_price_month, round(target_ots_info::NUMERIC,2) as target_ots_info, round(total_ots_info::NUMERIC,2) as total_ots_info, to_char(to_date(#{stdt},'YYYYMMDD'),'YYYY/MM/DD') AS s_date, to_char(to_date(#{eddt},'YYYYMMDD'),'YYYY/MM/DD') AS e_date FROM e_display ed, (
+			SELECT dvsn_1_no, dvsn_2_no, gid, 
+			       SUM(target_ots) AS target_ots_info, 
+			       SUM(total_ots)  AS total_ots_info 
+			FROM   (SELECT cc.dvsn_1_no, cc.dvsn_2_no, cc.gid, 
+				       SUM(target / hp.adm_cnt :: NUMERIC / 2 :: NUMERIC + target / hp.reg_cnt :: NUMERIC / 2 :: NUMERIC) * x.weight AS target_ots, 
+				       SUM(total / hp.adm_cnt :: NUMERIC / 2 :: NUMERIC + total / hp.reg_cnt :: NUMERIC / 2 :: NUMERIC) * x.weight AS total_ots 
+				FROM   base_heatpoint hp 
+				       left join (SELECT pdate, reg_cd
+							 <foreach collection="targetList" item="t" open=",SUM(" close=") as target" separator="+">${t}</foreach>, 
+							 SUM(tot)       AS total 
+						  FROM   base_data_tmp 
+						  WHERE  <![CDATA[ PDATE >= #{stdt} AND PDATE <= #{eddt} ]]>
+						  GROUP  BY pdate, reg_cd) hd 
+					      ON hp.reg_cd :: text = hd.reg_cd :: text 
+				       join (SELECT dvsn_1_no, dvsn_2_no, gid, hp_id 
+					     FROM   media_contains c 
+					     WHERE  ( dvsn_1_no, dvsn_2_no, gid ) IN (SELECT a.dvsn_1_no, a.dvsn_2_no, a.gid 
+								      FROM   campaign_media a 
+									     join base_type b 
+									       ON a.dvsn_1_no = b.dvsn_1_no 
+										  AND a.dvsn_2_no = b.dvsn_2_no 
+										  AND a.is_media = b.is_media 
+								      WHERE a.c_no = (SELECT c_no 
+										      FROM   campaign 
+										      WHERE  c_ctxt = #{ctxt}) 
+									AND a.dvsn_1_no = 5 
+									AND a.dvsn_2_no = 1 )) cc 
+					 ON cc.hp_id = hp.id 
+				       join e_display x ON cc.gid = x.gid 
+				GROUP  BY cc.dvsn_1_no, cc.dvsn_2_no, cc.gid, x.weight)z 
+			GROUP  BY dvsn_1_no, dvsn_2_no, gid ) tb_ed, base_type bt WHERE ed.dvsn_1_no = tb_ed.dvsn_1_no AND ed.dvsn_2_no = tb_ed.dvsn_2_no and ed.gid = tb_ed.gid and ed.dvsn_1_no = bt.dvsn_1_no AND ed.dvsn_2_no = bt.dvsn_2_no and bt.is_media = 'media'
+			UNION ALL 
+			SELECT dvsn_1_nm, dvsn_2_nm, name as media_id, road_address as addresss, ad_price_month, round(target_ots_info::NUMERIC,2) as target_ots_info, round(total_ots_info::NUMERIC,2) as total_ots_info, to_char(to_date(#{stdt},'YYYYMMDD'),'YYYY/MM/DD') AS s_date, to_char(to_date(#{eddt},'YYYYMMDD'),'YYYY/MM/DD') AS e_date from billboard bb, (
+			SELECT dd.dvsn_1_no, dd.dvsn_2_no, dd.gid, 
+			       SUM(target / hp.adm_cnt :: NUMERIC / 2 :: NUMERIC + target / hp.reg_cnt :: NUMERIC / 2 :: NUMERIC) AS target_ots_info, 
+			       SUM(total / hp.adm_cnt :: NUMERIC / 2 :: NUMERIC + total / hp.reg_cnt :: NUMERIC / 2 :: NUMERIC) AS total_ots_info 
+			FROM   base_heatpoint hp 
+			       left join (SELECT pdate, reg_cd
+						 <foreach collection="targetList" item="t" open=",SUM(" close=") as target" separator="+">${t}</foreach>, 
+						 SUM(tot)       AS total 
+					  FROM   base_data_tmp 
+					  WHERE  <![CDATA[ PDATE >= #{stdt} AND PDATE <= #{eddt} ]]>
+					  GROUP  BY pdate, reg_cd) hd 
+				      ON hp.reg_cd :: text = hd.reg_cd :: text 
+			       join (SELECT dvsn_1_no, dvsn_2_no, gid, hp_id 
+				     FROM   media_contains c
+				     WHERE  ( dvsn_1_no, dvsn_2_no, gid ) IN (SELECT a.dvsn_1_no, a.dvsn_2_no, a.gid 
+							      FROM   campaign_media a 
+								     join base_type b 
+								       ON a.dvsn_1_no = b.dvsn_1_no 
+									  AND a.dvsn_2_no = b.dvsn_2_no 
+									  AND a.is_media = b.is_media 
+							      WHERE  a.c_no = (SELECT c_no 
+									       FROM   campaign 
+									       WHERE  c_ctxt = #{ctxt}) 
+								     AND a.dvsn_1_no = 5 
+								     AND a.dvsn_2_no = 2 )) dd 
+				 ON dd.hp_id = hp.id 
+			GROUP  BY dd.dvsn_1_no,dd.dvsn_2_no, dd.gid) tb_bb, base_type bt WHERE bb.dvsn_1_no = tb_bb.dvsn_1_no AND bb.dvsn_2_no = tb_bb.dvsn_2_no and bb.gid = tb_bb.gid and bb.dvsn_1_no = bt.dvsn_1_no AND bb.dvsn_2_no = bt.dvsn_2_no and bt.is_media = 'media'
+			UNION ALL 
+			SELECT dvsn_1_nm, dvsn_2_nm, bd_nm as media_id, road_address as addresss, ad_price as ad_price_month, round(target_ots_info::NUMERIC,2) as target_ots_info, round(total_ots_info::NUMERIC,2) as total_ots_info, to_char(to_date(#{stdt},'YYYYMMDD'),'YYYY/MM/DD') AS s_date, to_char(to_date(#{eddt},'YYYYMMDD'),'YYYY/MM/DD') AS e_date from outerwall ow, (
+			SELECT dd.dvsn_1_no, dd.dvsn_2_no, dd.gid, 
+			       SUM(target / hp.adm_cnt :: NUMERIC / 2 :: NUMERIC + target / hp.reg_cnt :: NUMERIC / 2 :: NUMERIC) AS target_ots_info, 
+			       SUM(total / hp.adm_cnt :: NUMERIC / 2 :: NUMERIC + total / hp.reg_cnt :: NUMERIC / 2 :: NUMERIC) AS total_ots_info 
+			FROM   base_heatpoint hp 
+			       left join (SELECT pdate, reg_cd
+						 <foreach collection="targetList" item="t" open=",SUM(" close=") as target" separator="+">${t}</foreach>, 
+						 SUM(tot)       AS total 
+					  FROM   base_data_tmp 
+					  WHERE  <![CDATA[ PDATE >= #{stdt} AND PDATE <= #{eddt} ]]>
+					  GROUP  BY pdate, reg_cd) hd 
+				      ON hp.reg_cd :: text = hd.reg_cd :: text 
+			       join (SELECT dvsn_1_no, dvsn_2_no, gid, hp_id 
+				     FROM   media_contains c
+				     WHERE  ( dvsn_1_no, dvsn_2_no, gid ) IN (SELECT a.dvsn_1_no, a.dvsn_2_no, a.gid 
+							      FROM   campaign_media a 
+								     join base_type b 
+								       ON a.dvsn_1_no = b.dvsn_1_no 
+									  AND a.dvsn_2_no = b.dvsn_2_no 
+									  AND a.is_media = b.is_media 
+							      WHERE  a.c_no = (SELECT c_no 
+									       FROM   campaign 
+									       WHERE  c_ctxt = #{ctxt}) 
+								     AND a.dvsn_1_no = 5 
+								     AND a.dvsn_2_no = 3 )) dd 
+				 ON dd.hp_id = hp.id 
+			GROUP  BY dd.dvsn_1_no,dd.dvsn_2_no, dd.gid) tb_ow, base_type bt WHERE ow.dvsn_1_no = tb_ow.dvsn_1_no AND ow.dvsn_2_no = tb_ow.dvsn_2_no and ow.gid = tb_ow.gid and ow.dvsn_1_no = bt.dvsn_1_no AND ow.dvsn_2_no = bt.dvsn_2_no and bt.is_media = 'media'
+			ORDER BY 1,2,3,4,5,6,7,8,9
+	</select>
+	
+	<select id="selectTableMidia" parameterType="EgovMap" resultType="EgovMap">
+		<if test="colsList != null and colsList.size != 0">
+		SELECT 
+		<foreach collection="colsList" item="c" separator=",">
+			<choose>
+				<when test="c == 0">max(dvsn_1_nm) as dvsn_1_nm</when>
+				<when test="c == 1">max(dvsn_2_nm) as dvsn_2_nm</when>
+				<when test="c == 2">max(media_id) as media_id</when>
+				<when test="c == 3">max(address) as address</when>
+				<when test="c == 4">sum(price) as price</when>
+				<when test="c == 5">sum(total_ots) as total_ots</when>
+				<when test="c == 6">sum(target_ots) as target_ots</when>
+			</choose>
+		</foreach>		
+		FROM(
+		</if>
+		<![CDATA[
+			SELECT vw_media_ots.tot as total_ots,
+		]]>
+		<foreach collection="targetList" item="t" open="(" close=") as target_ots," separator="+">
+			vw_media_ots.${t}
+		</foreach>
+		<![CDATA[  
+		dvsn_1_nm, dvsn_2_nm, price, address, shelter.media_id, pre_total_ots, pre_target_ots
+		]]>
+		<![CDATA[
+    		FROM campaign, campaign_media , base_type, vw_media_ots, shelter
+        		WHERE campaign.c_no = campaign_media.c_no AND 
+              		campaign.c_ctxt = #{cid} AND 
+              		base_type.is_media = campaign_media.is_media AND 
+              		base_type.dvsn_1_no = campaign_media.dvsn_1_no AND 
+              		base_type.dvsn_2_no = campaign_media.dvsn_2_no AND 
+              		vw_media_ots.type = base_type.base AND 
+              		shelter.gid = campaign_media.gid AND 
+              		vw_media_ots.m_id::integer = campaign_media.gid
+		]]>
+		<if test="colsList != null and colsList.size != 0">
+		)aa
+		<if test="noGroup == null">
+		group by 
+		</if>
+		<foreach collection="colsList" item="c" separator=",">
+			<choose>
+				<when test="c == 0">dvsn_1_nm</when>
+				<when test="c == 1">dvsn_2_nm</when>
+				<when test="c == 2">media_id</when>
+				<when test="c == 3">address</when>
+			</choose>
+		</foreach>	
+		</if>
+	</select>
+	
+	<select id="selectMediaPerfomance" parameterType="EgovMap" resultType="EgovMap">
+		<![CDATA[
+			SELECT 
+		]]>
+		<foreach collection="targetList" item="t" open="(" close=") as target_ots," separator="+">
+			vw_media_ots.${t}
+		</foreach>
+		<![CDATA[  
+		dvsn_1_nm, dvsn_2_nm
+		]]>
+		<![CDATA[
+    		FROM campaign, campaign_media , base_type, vw_media_ots 
+        		WHERE campaign.c_no = campaign_media.c_no AND 
+              		campaign.c_ctxt = #{cid} AND 
+              		base_type.is_media = campaign_media.is_media AND 
+              		base_type.dvsn_1_no = campaign_media.dvsn_1_no AND 
+              		base_type.dvsn_2_no = campaign_media.dvsn_2_no AND 
+              		vw_media_ots.type = base_type.base AND 
+              		vw_media_ots.m_id::integer = campaign_media.gid;
+		]]>			
+	</select>
+	
+	<select id="selectLocationPerfomanceHjd" parameterType="EgovMap" resultType="EgovMap">
+		WITH STEP_1 AS (
+		SELECT A.GID, A.DVSN_1_NO, A.DVSN_2_NO, B.TYPE FROM CAMPAIGN_MEDIA A 
+		JOIN SHELTER B ON A.DVSN_1_NO = B.DVSN_1_NO AND A.DVSN_2_NO = B.DVSN_2_NO AND A.GID = B.GID
+		WHERE C_NO = (SELECT C_NO FROM CAMPAIGN WHERE C_CTXT = #{cid})
+		UNION ALL
+		SELECT A.GID, A.DVSN_1_NO, A.DVSN_2_NO, B.TYPE FROM CAMPAIGN_MEDIA A 
+		JOIN E_DISPLAY B ON A.DVSN_1_NO = B.DVSN_1_NO AND A.DVSN_2_NO = B.DVSN_2_NO AND A.GID = B.GID
+		WHERE C_NO = (SELECT C_NO FROM CAMPAIGN WHERE C_CTXT = #{cid})
+		UNION ALL
+		SELECT A.GID, A.DVSN_1_NO, A.DVSN_2_NO, B.TYPE FROM CAMPAIGN_MEDIA A 
+		JOIN BILLBOARD B ON A.DVSN_1_NO = B.DVSN_1_NO AND A.DVSN_2_NO = B.DVSN_2_NO AND A.GID = B.GID
+		WHERE C_NO = (SELECT C_NO FROM CAMPAIGN WHERE C_CTXT = #{cid})
+		UNION ALL
+		SELECT A.GID, A.DVSN_1_NO, A.DVSN_2_NO, B.TYPE FROM CAMPAIGN_MEDIA A 
+		JOIN OUTERWALL B ON A.DVSN_1_NO = B.DVSN_1_NO AND A.DVSN_2_NO = B.DVSN_2_NO AND A.GID = B.GID
+		WHERE C_NO = (SELECT C_NO FROM CAMPAIGN WHERE C_CTXT = #{cid})
+		),
+		STEP_1A AS (
+		SELECT A.GID, B.LINE, B.PSD_METRO AS STATION_NM, A.DVSN_1_NO, A.DVSN_2_NO, B.TYPE FROM CAMPAIGN_MEDIA A 
+		JOIN PSD B ON A.DVSN_1_NO = B.DVSN_1_NO AND A.DVSN_2_NO = B.DVSN_2_NO AND A.GID = B.GID
+		WHERE C_NO = (SELECT C_NO FROM CAMPAIGN WHERE C_CTXT = #{cid})
+		UNION ALL
+		SELECT A.GID, B.LINE, B.STATION_NM, A.DVSN_1_NO, A.DVSN_2_NO, B.TYPE FROM CAMPAIGN_MEDIA A 
+		JOIN GDIA B ON A.DVSN_1_NO = B.DVSN_1_NO AND A.DVSN_2_NO = B.DVSN_2_NO AND A.GID = B.GID
+		WHERE C_NO = (SELECT C_NO FROM CAMPAIGN WHERE C_CTXT = #{cid})
+		),
+		STEP_1B AS (
+		SELECT A.GID, A.DVSN_1_NO, A.DVSN_2_NO, B.TYPE 
+		,TRUNC(B.HOUSEHOLDS_CNT * B.AVG_HOUSEHOLDS * B.WEIGHT * (TO_DATE(#{eddt},'YYYYMMDD') - TO_DATE(#{stdt},'YYYYMMDD'))) AS TARGET_OTS
+		,TRUNC(B.HOUSEHOLDS_CNT * B.AVG_HOUSEHOLDS * B.WEIGHT * (TO_DATE(#{eddt},'YYYYMMDD') - TO_DATE(#{stdt},'YYYYMMDD'))) AS TOTAL_OTS
+		FROM CAMPAIGN_MEDIA A 
+		JOIN MEDIABOARD B ON A.DVSN_1_NO = B.DVSN_1_NO AND A.DVSN_2_NO = B.DVSN_2_NO AND A.GID = B.GID
+		WHERE C_NO = (SELECT C_NO FROM CAMPAIGN WHERE C_CTXT = #{cid})
+		UNION ALL
+		SELECT A.GID, A.DVSN_1_NO, A.DVSN_2_NO, B.TYPE 
+		,TRUNC(B.HOUSEHOLDS_CNT * B.AVG_HOUSEHOLDS * B.WEIGHT * (TO_DATE(#{eddt},'YYYYMMDD') - TO_DATE(#{stdt},'YYYYMMDD'))) AS TARGET_OTS
+		,TRUNC(B.HOUSEHOLDS_CNT * B.AVG_HOUSEHOLDS * B.WEIGHT * (TO_DATE(#{eddt},'YYYYMMDD') - TO_DATE(#{stdt},'YYYYMMDD'))) AS TOTAL_OTS
+		FROM CAMPAIGN_MEDIA A 
+		JOIN TOWNBOARD B ON A.DVSN_1_NO = B.DVSN_1_NO AND A.DVSN_2_NO = B.DVSN_2_NO AND A.GID = B.GID
+		WHERE C_NO = (SELECT C_NO FROM CAMPAIGN WHERE C_CTXT = #{cid})
+		),
+		STEP_2 AS (
+		SELECT TYPE, GID, HP_ID FROM MEDIA_CONTAINS WHERE (TYPE, GID) IN ( SELECT TYPE, GID FROM STEP_1 )
+		),
+		STEP_2A AS (
+		SELECT LINE_NUM, SUB_STA_NM, SUM(COALESCE(RIDE_PASGR_NUM,0)+COALESCE(ALIGHT_PASGR_NUM,0)) AS PASGR_NUM FROM CARD_SUBWAY_STATISTICS
+		<![CDATA[
+		WHERE USE_DT >= #{stdt} AND USE_DT <= #{eddt}
+		]]>	
+		AND (LINE_NUM, SUB_STA_NM) IN (SELECT LINE, STATION_NM FROM STEP_1A)
+		GROUP BY LINE_NUM, SUB_STA_NM
+		),
+		STEP_3 AS ( SELECT CC.TYPE, CC.GID, 
+		TRUNC(SUM(TARGET / HP.ADM_CNT::NUMERIC / 2::NUMERIC + TARGET / HP.REG_CNT::NUMERIC / 2::NUMERIC)) AS TARGET_OTS,
+		TRUNC(SUM(TOTAL / HP.ADM_CNT::NUMERIC / 2::NUMERIC + TOTAL / HP.REG_CNT::NUMERIC / 2::NUMERIC)) AS TOTAL_OTS
+		FROM BASE_HEATPOINT HP 
+		LEFT JOIN (SELECT REG_CD ,
+		SUM(${cols}) AS TARGET,
+		SUM(TOT) AS TOTAL
+		FROM BASE_DATA_TMP 
+		<![CDATA[
+		WHERE PDATE >= #{stdt} AND PDATE <= #{eddt} GROUP BY REG_CD) HD ON HP.REG_CD::TEXT = HD.REG_CD::TEXT
+		]]>
+		JOIN STEP_2 CC ON HP.ID = CC.HP_ID
+		GROUP BY CC.TYPE, CC.GID),
+		STEP_3A AS(
+		SELECT A.TYPE, A.GID, SUM(B.PASGR_NUM) AS TARGET_OTS, SUM(B.PASGR_NUM) AS TOTAL_OTS
+		FROM STEP_1A A JOIN STEP_2A B ON A.LINE = B.LINE_NUM AND A.STATION_NM = B.SUB_STA_NM
+		GROUP BY A.TYPE, A.GID
+		),
+		STEP_4 AS (
+		SELECT A.TYPE, A.GID, B.TARGET_OTS, B.TOTAL_OTS FROM STEP_1 A JOIN STEP_3 B ON A.TYPE = B.TYPE AND A.GID = B.GID
+		UNION ALL
+		SELECT TYPE, GID, TARGET_OTS, TOTAL_OTS FROM STEP_3A 
+		UNION ALL
+		SELECT TYPE, GID, TARGET_OTS, TOTAL_OTS FROM STEP_1B 
+		),
+		STEP_5 AS (
+		SELECT B.DISTRICT_NM, C.GEOM, SUM(A.TARGET_OTS) AS TARGET_OTS, SUM(A.TOTAL_OTS) AS TOTAL_OTS
+		FROM STEP_4 A
+		JOIN MEDIA_HJD B ON A.TYPE = B.TYPE AND A.GID = B.GID
+		JOIN EMD_SEOUL C ON B.DISTRICT_CD = C.ADM_DR_CD
+		GROUP BY B.DISTRICT_CD, B.DISTRICT_NM, C.GEOM
+		)
+		SELECT ROW_NUMBER() OVER(ORDER BY TARGET_OTS DESC) AS OTS_RANK,
+		DISTRICT_NM, TARGET_OTS, TOTAL_OTS
+		FROM STEP_5 
+		WHERE TARGET_OTS IS NOT NULL
+		ORDER BY OTS_RANK ASC
+		LIMIT 10
+	</select>
+	
+	<select id="selectLocationPerfomanceSgg" parameterType="EgovMap" resultType="EgovMap">
+		WITH STEP_1 AS (
+		SELECT A.GID, A.DVSN_1_NO, A.DVSN_2_NO, B.TYPE FROM CAMPAIGN_MEDIA A 
+		JOIN SHELTER B ON A.DVSN_1_NO = B.DVSN_1_NO AND A.DVSN_2_NO = B.DVSN_2_NO AND A.GID = B.GID
+		WHERE C_NO = (SELECT C_NO FROM CAMPAIGN WHERE C_CTXT = #{cid})
+		UNION ALL
+		SELECT A.GID, A.DVSN_1_NO, A.DVSN_2_NO, B.TYPE FROM CAMPAIGN_MEDIA A 
+		JOIN E_DISPLAY B ON A.DVSN_1_NO = B.DVSN_1_NO AND A.DVSN_2_NO = B.DVSN_2_NO AND A.GID = B.GID
+		WHERE C_NO = (SELECT C_NO FROM CAMPAIGN WHERE C_CTXT = #{cid})
+		UNION ALL
+		SELECT A.GID, A.DVSN_1_NO, A.DVSN_2_NO, B.TYPE FROM CAMPAIGN_MEDIA A 
+		JOIN BILLBOARD B ON A.DVSN_1_NO = B.DVSN_1_NO AND A.DVSN_2_NO = B.DVSN_2_NO AND A.GID = B.GID
+		WHERE C_NO = (SELECT C_NO FROM CAMPAIGN WHERE C_CTXT = #{cid})
+		UNION ALL
+		SELECT A.GID, A.DVSN_1_NO, A.DVSN_2_NO, B.TYPE FROM CAMPAIGN_MEDIA A 
+		JOIN OUTERWALL B ON A.DVSN_1_NO = B.DVSN_1_NO AND A.DVSN_2_NO = B.DVSN_2_NO AND A.GID = B.GID
+		WHERE C_NO = (SELECT C_NO FROM CAMPAIGN WHERE C_CTXT = #{cid})
+		),
+		STEP_1A AS (
+		SELECT A.GID, B.LINE, B.PSD_METRO AS STATION_NM, A.DVSN_1_NO, A.DVSN_2_NO, B.TYPE FROM CAMPAIGN_MEDIA A 
+		JOIN PSD B ON A.DVSN_1_NO = B.DVSN_1_NO AND A.DVSN_2_NO = B.DVSN_2_NO AND A.GID = B.GID
+		WHERE C_NO = (SELECT C_NO FROM CAMPAIGN WHERE C_CTXT = #{cid})
+		UNION ALL
+		SELECT A.GID, B.LINE, B.STATION_NM, A.DVSN_1_NO, A.DVSN_2_NO, B.TYPE FROM CAMPAIGN_MEDIA A 
+		JOIN GDIA B ON A.DVSN_1_NO = B.DVSN_1_NO AND A.DVSN_2_NO = B.DVSN_2_NO AND A.GID = B.GID
+		WHERE C_NO = (SELECT C_NO FROM CAMPAIGN WHERE C_CTXT = #{cid})
+		),
+		STEP_1B AS (
+		SELECT A.GID, A.DVSN_1_NO, A.DVSN_2_NO, B.TYPE 
+		,TRUNC(B.HOUSEHOLDS_CNT * B.AVG_HOUSEHOLDS * B.WEIGHT * (TO_DATE(#{eddt},'YYYYMMDD') - TO_DATE(#{stdt},'YYYYMMDD'))) AS TARGET_OTS
+		,TRUNC(B.HOUSEHOLDS_CNT * B.AVG_HOUSEHOLDS * B.WEIGHT * (TO_DATE(#{eddt},'YYYYMMDD') - TO_DATE(#{stdt},'YYYYMMDD'))) AS TOTAL_OTS
+		FROM CAMPAIGN_MEDIA A 
+		JOIN MEDIABOARD B ON A.DVSN_1_NO = B.DVSN_1_NO AND A.DVSN_2_NO = B.DVSN_2_NO AND A.GID = B.GID
+		WHERE C_NO = (SELECT C_NO FROM CAMPAIGN WHERE C_CTXT = #{cid})
+		UNION ALL
+		SELECT A.GID, A.DVSN_1_NO, A.DVSN_2_NO, B.TYPE 
+		,TRUNC(B.HOUSEHOLDS_CNT * B.AVG_HOUSEHOLDS * B.WEIGHT * (TO_DATE(#{eddt},'YYYYMMDD') - TO_DATE(#{stdt},'YYYYMMDD'))) AS TARGET_OTS
+		,TRUNC(B.HOUSEHOLDS_CNT * B.AVG_HOUSEHOLDS * B.WEIGHT * (TO_DATE(#{eddt},'YYYYMMDD') - TO_DATE(#{stdt},'YYYYMMDD'))) AS TOTAL_OTS
+		FROM CAMPAIGN_MEDIA A 
+		JOIN TOWNBOARD B ON A.DVSN_1_NO = B.DVSN_1_NO AND A.DVSN_2_NO = B.DVSN_2_NO AND A.GID = B.GID
+		WHERE C_NO = (SELECT C_NO FROM CAMPAIGN WHERE C_CTXT = #{cid})
+		),
+		STEP_2 AS (
+		SELECT TYPE, GID, HP_ID FROM MEDIA_CONTAINS WHERE (TYPE, GID) IN ( SELECT TYPE, GID FROM STEP_1 )
+		),
+		STEP_2A AS (
+		SELECT LINE_NUM, SUB_STA_NM, SUM(COALESCE(RIDE_PASGR_NUM,0)+COALESCE(ALIGHT_PASGR_NUM,0)) AS PASGR_NUM FROM CARD_SUBWAY_STATISTICS
+		<![CDATA[
+		WHERE USE_DT >= #{stdt} AND USE_DT <= #{eddt}
+		]]>
+		AND (LINE_NUM, SUB_STA_NM) IN (SELECT LINE, STATION_NM FROM STEP_1A)
+		GROUP BY LINE_NUM, SUB_STA_NM
+		),
+		STEP_3 AS ( SELECT CC.TYPE, CC.GID, 
+		TRUNC(SUM(TARGET / HP.ADM_CNT::NUMERIC / 2::NUMERIC + TARGET / HP.REG_CNT::NUMERIC / 2::NUMERIC)) AS TARGET_OTS,
+		TRUNC(SUM(TOTAL / HP.ADM_CNT::NUMERIC / 2::NUMERIC + TOTAL / HP.REG_CNT::NUMERIC / 2::NUMERIC)) AS TOTAL_OTS
+		FROM BASE_HEATPOINT HP 
+		LEFT JOIN (SELECT REG_CD ,
+		SUM(${cols}) AS TARGET, SUM(TOT) AS TOTAL
+		FROM BASE_DATA_TMP 
+		<![CDATA[
+		WHERE PDATE >= #{stdt} AND PDATE <= #{eddt} GROUP BY REG_CD) HD ON HP.REG_CD::TEXT = HD.REG_CD::TEXT
+		]]>
+		JOIN STEP_2 CC ON HP.ID = CC.HP_ID
+		GROUP BY CC.TYPE, CC.GID),
+		STEP_3A AS(
+		SELECT A.TYPE, A.GID, SUM(B.PASGR_NUM) AS TARGET_OTS, SUM(B.PASGR_NUM) AS TOTAL_OTS
+		FROM STEP_1A A JOIN STEP_2A B ON A.LINE = B.LINE_NUM AND A.STATION_NM = B.SUB_STA_NM
+		GROUP BY A.TYPE, A.GID
+		),
+		STEP_4 AS (
+		SELECT A.TYPE, A.GID, B.TARGET_OTS, B.TOTAL_OTS FROM STEP_1 A JOIN STEP_3 B ON A.TYPE = B.TYPE AND A.GID = B.GID
+		UNION ALL
+		SELECT TYPE, GID, TARGET_OTS, TOTAL_OTS FROM STEP_3A 
+		UNION ALL
+		SELECT TYPE, GID, TARGET_OTS, TOTAL_OTS FROM STEP_1B 
+		),
+		STEP_5 AS (
+		SELECT B.DISTRICT_NM, C.GEOM, SUM(A.TARGET_OTS) AS TARGET_OTS, SUM(A.TOTAL_OTS) AS TOTAL_OTS
+		FROM STEP_4 A
+		JOIN MEDIA_SGG B ON A.TYPE = B.TYPE AND A.GID = B.GID
+		JOIN SGG_SEOUL C ON B.DISTRICT_CD = C.SIGUNGU_CD
+		GROUP BY B.DISTRICT_CD, B.DISTRICT_NM, C.GEOM
+		)
+		SELECT ROW_NUMBER() OVER(ORDER BY TARGET_OTS DESC) AS OTS_RANK, GEOM,
+		DISTRICT_NM, TARGET_OTS, TOTAL_OTS
+		FROM STEP_5 
+		WHERE TARGET_OTS IS NOT NULL
+		ORDER BY OTS_RANK ASC
+		LIMIT 10
+	</select>
+	
+	<select id="selectCampignDate" parameterType="EgovMap" resultType="EgovMap">
+		<![CDATA[
+			select s_dt, e_dt from campaign where c_ctxt=#{cid} 
+		]]>
+	</select>
+	
+	<select id="selectCampignImg" parameterType="EgovMap" resultType="EgovMap">
+		<![CDATA[
+			select file_svr_name from campaign_img where c_ctxt = #{cid}
+		]]>
+	</select>
+	
+</mapper>

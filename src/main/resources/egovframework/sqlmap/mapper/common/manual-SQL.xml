@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="manual">
+
+	<select id="selectManualList" resultType="EgovMap">
+		<![CDATA[
+			SELECT 
+				ROW_NUMBER() OVER (ORDER BY ORDER_NO ASC, NO ASC) AS NO,
+				NO 			AS MID,
+				TITLE,
+				READ_COUNT
+			FROM 
+				TB_MANUAL
+			WHERE
+				DELETED = 'N'
+			ORDER BY
+				ORDER_NO	ASC,
+				NO			ASC
+		]]>
+	</select>
+
+	<select id="selectManual" parameterType="EgovMap" resultType="EgovMap">
+		<![CDATA[
+			SELECT
+				NO		AS MID,
+				TITLE,
+				CONTENTS,
+				READ_COUNT
+			FROM
+				TB_MANUAL
+			WHERE 
+				NO = ${mid}
+			AND 
+				DELETED = 'N'
+		]]>
+	</select>
+
+	<insert id="insertManual" parameterType="EgovMap">
+		<![CDATA[
+			INSERT INTO	TB_MANUAL
+				(TITLE, CONTENTS)
+			VALUES
+				(#{title}, #{contents})
+		]]>
+	</insert>
+	
+	<update id="updateManual" parameterType="EgovMap">
+		<![CDATA[
+			UPDATE
+				TB_MANUAL
+			SET	
+				TITLE = #{title},
+				CONTENTS = #{contents}
+			WHERE
+				NO = ${mid}
+			AND
+				DELETED = 'N'				
+		]]>
+	</update>
+	
+	<update id="deleteMenual" parameterType="EgovMap">
+		<![CDATA[
+			UPDATE 
+				TB_MANUAL
+			SET
+				DELETED = 'Y'
+			WHERE 
+				NO = ${mid}
+			AND 
+				DELETED = 'N'
+		]]>
+	</update>
+
+	<update id="updateManualReadCount">
+		<![CDATA[
+			UPDATE 
+				TB_MANUAL
+			SET
+				READ_COUNT = READ_COUNT + 1
+			WHERE 
+				NO = ${mid} 
+			AND
+				DELETED = 'N'
+		]]>
+	</update>
+</mapper>

@@ -1,0 +1,232 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="member">
+	
+	<select id="idConfirm" parameterType="EgovMap" resultType="int">
+ 		SELECT COUNT(*) FROM a_01_info WHERE u_crpt=#{uId}
+ 		<if test="uPw!=null and !uPw.equals('')">
+ 			AND u_pw=#{uPw}
+ 		</if>
+ 	</select>
+ 	
+	<select id="pwchkConfirm" parameterType="EgovMap" resultType="int">
+ 		SELECT COUNT(*) FROM a_01_info WHERE u_crpt=#{uId} and u_nm=#{uNm}
+ 	</select>
+ 	
+	<select id="selectMemberLogin" parameterType="EgovMap" resultType="datarget.sys.sec.user.SUserAccessVO">
+		SELECT 
+			u_id as user_id,
+			u_pw as user_pw,
+			u_nm as user_nm,
+			u_hp as user_hp,
+			c_nm as user_cp,
+			c_ctgr_no as user_cp_no,
+			u_auth as authority
+		 FROM a_01_info WHERE u_crpt=#{uId}
+	</select>
+	
+	<insert id="insertMemberJoin" parameterType="EgovMap" >
+		<![CDATA[
+			insert into a_01_info (
+			u_id,
+			u_crpt,
+			u_nm,
+			u_hp,
+			c_nm,
+			c_ctgr_no,
+			id_gen_agr,
+			u_pw,
+			u_auth)
+			values (
+			#{uId},
+			#{uCrpt},
+			#{uNm},
+			#{uHp},
+			#{cNm},
+			CAST(#{cCtgrNo} AS INTEGER),
+			#{idGenAgr},
+			#{uPw},
+			'B'
+			)
+			
+		]]>
+	</insert>
+	
+	<update id="updateMemberModity" parameterType="EgovMap">
+		UPDATE a_01_info SET
+		      u_pw       = #{uPw}
+		     , c_nm      = #{cNm}
+		     , u_hp      = #{uHp}
+		     , c_ctgr_no = CAST(#{cCtgrNo} AS INTEGER)
+		 WHERE u_id		 = #{id} 
+	</update>
+	
+	<select id="selectBeforePassword" parameterType="EgovMap" resultType="string">
+		select u_pw from A_01_INFO where U_CRPT = #{uId}
+	</select>
+	
+	<update id="updateMemberpwChange" parameterType="EgovMap">
+		UPDATE a_01_info SET
+		      u_pw      = #{uPw}
+		 WHERE u_crpt	= #{uId} 
+	</update>
+	
+	<select id="selectMemberNo" parameterType="EgovMap" resultType="EgovMap">
+		SELECT ID::TEXT, U_ID AS USER_EMAIL FROM A_01_INFO WHERE U_CRPT = #{uId} AND U_NM = #{uNm}
+	</select>
+	
+	<select id="selectMemberEmail" parameterType="EgovMap" resultType="string">
+		SELECT U_ID FROM A_01_INFO WHERE ID = ${seq} AND U_RW_PW = 'Y'
+	</select>
+	
+	<update id="updateMemberRwPw" parameterType="EgovMap" >
+		UPDATE A_01_INFO SET U_RW_PW = 'Y' WHERE U_CRPT = #{uId} AND U_NM = #{uNm} AND U_RW_PW = 'N'
+	</update>
+	
+	<update id="updateMemberRwPwSubmit" parameterType="EgovMap" >
+		UPDATE A_01_INFO SET U_RW_PW = 'N' WHERE U_ID = #{uId} AND U_RW_PW = 'Y'
+	</update>
+	
+	<insert id="insertCertification" parameterType="EgovMap">
+		INSERT INTO A_02_CRTF(
+			NO,
+			REQ_EMAIL,
+			REQ_DATETIME,
+			EXP_DATETIME,
+			CRTF_YN,
+			CRTF_DATETIME
+		)VALUES(
+			DEFAULT,
+			#{email},
+			DEFAULT,
+			DEFAULT,
+			DEFAULT,
+			NULL
+		)
+	</insert>
+	
+	<select id="selectCrtNo" parameterType="EgovMap" resultType="int">
+		SELECT NO 
+		FROM A_02_CRTF
+		WHERE REQ_EMAIL = #{email}
+		AND CRTF_YN      = 'N'
+		AND REQ_DATETIME <![CDATA[< NOW()]]>
+		AND EXP_DATETIME <![CDATA[> NOW()]]>
+	</select>
+	
+	<update id="updateCrt" parameterType="EgovMap">
+		UPDATE A_02_CRTF SET
+		      CRTF_YN      = 'Y',
+		      CRTF_DATETIME = DEFAULT
+		 WHERE NO		= ${seq} 
+		 AND CRTF_YN      = 'N'
+		 AND REQ_DATETIME <![CDATA[< NOW()]]>
+		 AND EXP_DATETIME <![CDATA[> NOW()]]>
+	</update>
+	
+	<select id="selectCrtCnt" parameterType="EgovMap" resultType="int">
+		SELECT COUNT(NO) 
+		FROM A_02_CRTF 
+		WHERE REQ_EMAIL = #{email}
+		AND CRTF_YN      = 'N'
+		AND REQ_DATETIME <![CDATA[< NOW()]]>
+		AND EXP_DATETIME <![CDATA[> NOW()]]>
+	</select>
+	
+	<select id="selectChkCrtCnt" parameterType="EgovMap" resultType="int">
+		SELECT COUNT(NO) 
+		FROM A_02_CRTF 
+		WHERE REQ_EMAIL = #{email}
+		AND CRTF_YN      = 'Y'
+	</select>
+	
+	<delete id="deleteCertification" parameterType="EgovMap">
+		DELETE FROM A_02_CRTF WHERE REQ_EMAIL = #{email}
+	</delete>
+	
+	<select id="selectPasswordCnt" parameterType="EgovMap" resultType="int">
+		SELECT COUNT(U_PW) 
+		FROM A_01_INFO
+		WHERE U_ID = #{email}
+		AND U_PW = #{value}
+	</select>
+	
+	<select id="selectAlarmList" parameterType="EgovMap" resultType="EgovMap">
+			SELECT MESSAGE_ID AS IDX, TITLE, CONTENTS, SEND_DATE, recieve_date FROM MESSAGE WHERE RECIEVER = (SELECT ID FROM A_01_INFO WHERE U_ID = #{uid}) AND IS_DEL = 'N' ORDER BY SEND_DATE DESC OFFSET ${nextCnt} ROWS FETCH FIRST 3 ROWS ONLY
+	</select>
+	
+	<update id="updateReadMessage" parameterType="EgovMap">
+		UPDATE MESSAGE SET
+		      RECIEVE_DATE = DEFAULT
+		 WHERE MESSAGE_ID		= ${p1} 
+		 <!-- AND RECIEVER = (SELECT ID FROM A_01_INFO WHERE U_ID = #{p2}) -->
+		 AND RECIEVE_DATE IS NULL
+	</update>
+	
+	<select id="selectUserInfoList" resultType="EgovMap">
+		SELECT U_ID, U_PW FROM A_01_INFO WHERE U_CRPT LIKE '%@%'
+	</select>
+	
+	<update id="updateUserInfoCryption" parameterType="EgovMap">
+		UPDATE A_01_INFO SET U_CRPT = #{cryptoId}, U_PW = #{cryptoPw} WHERE U_ID = #{uId}
+	</update>
+	
+	<select id="countAlarm" parameterType="EgovMap" resultType="EgovMap">
+		SELECT   min(message_id) as min, max(message_id) as max,
+				 count(CASE WHEN recieve_date is null THEN 1 END) as rec_alarm,
+				 count(*) as tot_alarm,
+				 ${curCnt}+1 as cnt_page,
+				 count(*)/3+1 as tot_page
+		FROM     message 
+		WHERE    reciever = 
+		         ( 
+		                SELECT id 
+		                FROM   a_01_info 
+		                WHERE  u_id = #{uid})
+		AND is_del = 'N'
+	</select>
+	
+	<select id="selectAlarmInfo" parameterType="EgovMap" resultType="EgovMap">
+		SELECT   message_id,
+				 title,
+				 contents,
+				 TO_CHAR(send_date, 'YYYY.MM.DD HH24:MI') as send_date
+		FROM     message 
+		WHERE    message_id = ${p1}
+		AND is_del = 'N'
+	</select>
+	
+	<select id="selectMoveAlarm" parameterType="EgovMap" resultType="EgovMap">
+		SELECT COUNT(message_id)::integer as cnt
+		<if test='type.equals("b")'>
+ 			, COALESCE(min(message_id),0)::integer as idx
+ 		</if>
+ 		<if test='type.equals("s")'>
+ 			, COALESCE(max(message_id),0)::integer as idx
+ 		</if>
+		FROM     message 
+		WHERE 	 is_del = 'N'
+		AND 	 reciever = 
+		         ( 
+		                SELECT id 
+		                FROM   a_01_info 
+		                WHERE  u_id = #{uid})
+		<if test='type.equals("b")'>
+ 			<![CDATA[AND message_id > ${idx}]]>
+ 		</if>
+ 		<if test='type.equals("s")'>
+ 			<![CDATA[AND message_id < ${idx}]]>
+ 		</if>
+	</select>
+	
+	<update id="delMessage" parameterType="EgovMap">
+		UPDATE message SET
+		      is_del = 'Y'
+		 WHERE  message_id = ${idx}
+		 AND	reciever = 
+		         ( 
+		                SELECT id 
+		                FROM   a_01_info 
+		                WHERE  u_id = #{uid})
+	</update>
+</mapper>

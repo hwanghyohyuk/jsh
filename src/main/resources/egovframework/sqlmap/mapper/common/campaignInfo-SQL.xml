@@ -1,0 +1,550 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="campaignInfo">
+	
+		<select id="selectCampaignInfo" parameterType="EgovMap" resultType="EgovMap">
+		<![CDATA[
+			SELECT 
+				C_NO,
+				C_CTXT,
+				C_TIT,
+				C_ADVR,
+				TO_CHAR(S_DT, 'YYYYMMDD') AS S_DT,
+				TO_CHAR(E_DT, 'YYYYMMDD') AS E_DT,
+				TO_CHAR(C_DT, 'YYYYMMDD') AS C_DT,
+				TO_CHAR(M_DT, 'YYYYMMDD') AS M_DT,
+				T_AG,
+				T_GNDR,
+				C_BDGT_LMT,
+				C_BDGT_RSLT,
+				C_PRGS_STTS,
+				A_SGST,
+				C_WRTR,
+				IS_NW,
+				TOTAL_OTS,
+				TARGET_OTS
+			 FROM 
+			 	CAMPAIGN WHERE C_CTXT = #{cid}
+		]]>
+	</select>
+	
+	<select id="selectInfoBase" resultType="EgovMap" parameterType="EgovMap">
+		<![CDATA[
+			SELECT *, 
+				 #{cid} as cid 
+			FROM 
+				base_type 
+			WHERE(
+				is_media, 
+				dvsn_1_no, 
+				dvsn_2_no) 
+			IN(
+				SELECT 
+					is_media, 
+					dvsn_1_no, 
+					dvsn_2_no 
+				FROM 
+					campaign_media A 
+				WHERE 
+					c_no = (
+						SELECT 
+							c_no 
+						FROM  
+							campaign 
+						WHERE 
+							c_ctxt = #{cid}
+					)
+			)
+			]]>
+	</select>
+	
+	<select id="selectInfoList" resultType="EgovMap" parameterType="EgovMap">
+		<if test="base.equals('shelter')">
+			SELECT dvsn_1_nm, dvsn_2_nm, media_id as name, address, ad_price_month, pre_target_ots, pre_total_ots FROM(
+             	SELECT * FROM 
+        			campaign_media 
+    			WHERE 
+    				campaign_media.c_no = (
+    					SELECT 
+    						campaign.c_no 
+    					FROM 
+    						campaign 
+    					WHERE 
+    						campaign.c_ctxt = #{cid}
+    				)
+        			AND campaign_media.is_media = #{isMedia}
+        			AND campaign_media.dvsn_1_no = ${dvsn1No}
+                    AND campaign_media.dvsn_2_no = ${dvsn2No}
+            )  A 
+            ,${base} c
+            ,base_type d
+            WHERE 
+            	A.gid = c.gid
+               	AND d.dvsn_1_no = ${dvsn1No} 
+                AND A.dvsn_2_no =  d.dvsn_2_no
+                AND d.base = #{base}
+		</if>
+		<if test="base.equals('psd')">
+			SELECT dvsn_1_nm, dvsn_2_nm, psd_no as name, line||' '||psd_metro as address, ad_price_month, pre_target_ots, pre_total_ots FROM(
+             	SELECT * FROM 
+        			campaign_media 
+    			WHERE 
+    				campaign_media.c_no = (
+    					SELECT 
+    						campaign.c_no 
+    					FROM 
+    						campaign 
+    					WHERE 
+    						campaign.c_ctxt = #{cid}
+    				)
+        			AND campaign_media.is_media = #{isMedia}
+        			AND campaign_media.dvsn_1_no = ${dvsn1No}
+                    AND campaign_media.dvsn_2_no = ${dvsn2No}
+            )  A 
+            ,${base} c
+            ,base_type d
+            WHERE 
+            	A.gid = c.gid
+               	AND d.dvsn_1_no = ${dvsn1No} 
+                AND A.dvsn_2_no =  d.dvsn_2_no
+                AND d.base = #{base}
+		</if>
+		<if test="base.equals('gdia')">
+			SELECT dvsn_1_nm, dvsn_2_nm, COALESCE((SELECT PKG_NM FROM PKG WHERE PKG_ID = (SELECT PKG_ID FROM CAMPAIGN_PACKAGE WHERE C_NO = (SELECT C_NO FROM CAMPAIGN WHERE  C_CTXT = #{cid}) 
+        			AND dvsn_1_no = ${dvsn1No}
+                    AND dvsn_2_no = ${dvsn2No}
+                    )), media_type) as name, line||' '||station_nm as address, ad_price_month, pre_target_ots, pre_total_ots FROM(
+             	SELECT * FROM 
+        			campaign_media 
+    			WHERE 
+    				campaign_media.c_no = (
+    					SELECT 
+    						campaign.c_no 
+    					FROM 
+    						campaign 
+    					WHERE 
+    						campaign.c_ctxt = #{cid}
+    				)
+        			AND campaign_media.is_media = #{isMedia}
+        			AND campaign_media.dvsn_1_no = ${dvsn1No}
+                    AND campaign_media.dvsn_2_no = ${dvsn2No}
+            )  A 
+            ,${base} c
+            ,base_type d
+            WHERE 
+            	A.gid = c.gid
+               	AND d.dvsn_1_no = ${dvsn1No} 
+                AND A.dvsn_2_no =  d.dvsn_2_no
+                AND d.base = #{base}
+		</if>
+		<if test="base.equals('bus')">
+			SELECT dvsn_1_nm, dvsn_2_nm, route_no as name, primary_route as address, ad_price_month, pre_target_ots, pre_total_ots FROM(
+             	SELECT * FROM 
+        			campaign_media 
+    			WHERE 
+    				campaign_media.c_no = (
+    					SELECT 
+    						campaign.c_no 
+    					FROM 
+    						campaign 
+    					WHERE 
+    						campaign.c_ctxt = #{cid}
+    				)
+        			AND campaign_media.is_media = #{isMedia}
+        			AND campaign_media.dvsn_1_no = ${dvsn1No}
+                    AND campaign_media.dvsn_2_no = ${dvsn2No}
+            )  A 
+            ,${base} c
+            ,base_type d
+            WHERE 
+            	A.gid = c.gid
+               	AND d.dvsn_1_no = ${dvsn1No} 
+                AND A.dvsn_2_no =  d.dvsn_2_no
+                AND d.base = #{base}
+		</if>
+		<if test="base.equals('billboard')">
+			SELECT dvsn_1_nm, dvsn_2_nm, name, road_address as address, ad_price_month, pre_target_ots, pre_total_ots FROM(
+             	SELECT * FROM 
+        			campaign_media 
+    			WHERE 
+    				campaign_media.c_no = (
+    					SELECT 
+    						campaign.c_no 
+    					FROM 
+    						campaign 
+    					WHERE 
+    						campaign.c_ctxt = #{cid}
+    				)
+        			AND campaign_media.is_media = #{isMedia}
+        			AND campaign_media.dvsn_1_no = ${dvsn1No}
+                    AND campaign_media.dvsn_2_no = ${dvsn2No}
+            )  A 
+            ,${base} c
+            ,base_type d
+            WHERE 
+            	A.gid = c.gid
+               	AND d.dvsn_1_no = ${dvsn1No} 
+                AND A.dvsn_2_no =  d.dvsn_2_no
+                AND d.base = #{base}
+		</if>
+		<if test="base.equals('e_display')">
+			SELECT dvsn_1_nm, dvsn_2_nm, name, address, ad_price_month, pre_target_ots, pre_total_ots FROM(
+             	SELECT * FROM 
+        			campaign_media 
+    			WHERE 
+    				campaign_media.c_no = (
+    					SELECT 
+    						campaign.c_no 
+    					FROM 
+    						campaign 
+    					WHERE 
+    						campaign.c_ctxt = #{cid}
+    				)
+        			AND campaign_media.is_media = #{isMedia}
+        			AND campaign_media.dvsn_1_no = ${dvsn1No}
+                    AND campaign_media.dvsn_2_no = ${dvsn2No}
+            )  A 
+            ,${base} c
+            ,base_type d
+            WHERE 
+            	A.gid = c.gid
+               	AND d.dvsn_1_no = ${dvsn1No} 
+                AND A.dvsn_2_no =  d.dvsn_2_no
+                AND d.base = #{base}
+		</if>
+        <if test="base.equals('mediaboard')" >
+	            SELECT dvsn_1_nm, dvsn_2_nm, COALESCE((SELECT PKG_NM FROM PKG WHERE PKG_ID = (SELECT PKG_ID FROM CAMPAIGN_PACKAGE WHERE C_NO = (SELECT C_NO FROM CAMPAIGN WHERE  C_CTXT = #{cid})
+	            	AND dvsn_1_no = ${dvsn1No}
+                    AND dvsn_2_no = ${dvsn2No}
+                    )), cplx_nm) as name, address, ad_price_month, pre_target_ots, pre_total_ots FROM(
+	             	SELECT * FROM 
+	        			campaign_media 
+	    			WHERE 
+	    				campaign_media.c_no = (
+	    					SELECT 
+	    						campaign.c_no 
+	    					FROM 
+	    						campaign 
+	    					WHERE 
+	    						campaign.c_ctxt = #{cid}
+	    				)
+	        			AND campaign_media.is_media = #{isMedia}
+	        			AND campaign_media.dvsn_1_no = ${dvsn1No}
+	                    AND campaign_media.dvsn_2_no = ${dvsn2No}
+	            )  A 
+	            ,${base} c
+	            ,base_type d
+            	WHERE 
+                	A.gid = c.gid
+                	AND d.dvsn_1_no = ${dvsn1No} 
+                	AND A.dvsn_2_no =  d.dvsn_2_no
+                	AND d.base = #{base}
+		</if>
+		<if test="base.equals('townboard')" >
+	            SELECT dvsn_1_nm, dvsn_2_nm, COALESCE((SELECT PKG_NM FROM PKG WHERE PKG_ID = (SELECT PKG_ID FROM CAMPAIGN_PACKAGE WHERE C_NO = (SELECT C_NO FROM CAMPAIGN WHERE  C_CTXT = #{cid})
+	            	AND dvsn_1_no = ${dvsn1No}
+                    AND dvsn_2_no = ${dvsn2No}
+                    )), APT_NM) as name, address, ad_price_month_1 as ad_price_month ,pre_target_ots, pre_total_ots FROM(
+	             	SELECT * FROM 
+	        			campaign_media 
+	    			WHERE 
+	    				campaign_media.c_no = (
+	    					SELECT 
+	    						campaign.c_no 
+	    					FROM 
+	    						campaign 
+	    					WHERE 
+	    						campaign.c_ctxt = #{cid}
+	    				)
+	        			AND campaign_media.is_media = #{isMedia}
+	        			AND campaign_media.dvsn_1_no = ${dvsn1No}
+	                    AND campaign_media.dvsn_2_no = ${dvsn2No}
+	            )  A 
+	            ,${base} c
+	            ,base_type d
+            	WHERE 
+                	A.gid = c.gid
+                	AND d.dvsn_1_no = ${dvsn1No} 
+                	AND A.dvsn_2_no =  d.dvsn_2_no
+                	AND d.base = #{base}
+		</if>
+		<if test="base.equals('outerwall')">
+			SELECT dvsn_1_nm, dvsn_2_nm, bd_nm as name, road_address as address, ad_price as ad_price_month, pre_target_ots, pre_total_ots FROM(
+             	SELECT * FROM 
+        			campaign_media 
+    			WHERE 
+    				campaign_media.c_no = (
+    					SELECT 
+    						campaign.c_no 
+    					FROM 
+    						campaign 
+    					WHERE 
+    						campaign.c_ctxt = #{cid}
+    				)
+        			AND campaign_media.is_media = #{isMedia}
+        			AND campaign_media.dvsn_1_no = ${dvsn1No}
+                    AND campaign_media.dvsn_2_no = ${dvsn2No}
+            )  A 
+            ,${base} c
+            ,base_type d
+            WHERE 
+            	A.gid = c.gid
+               	AND d.dvsn_1_no = ${dvsn1No} 
+                AND A.dvsn_2_no =  d.dvsn_2_no
+                AND d.base = #{base}
+		</if>
+	</select>
+	
+	<select id="selectInfoOts" parameterType="EgovMap" resultType="EgovMap">
+		<![CDATA[
+			SELECT
+				sum(vw_media_ots.tot) as total_ots
+			]]>
+				<foreach collection="targetList" item="t" open=",SUM(" close=") as target_ots" separator="+">
+				vw_media_ots.${t}
+				</foreach>
+			<![CDATA[
+    			FROM campaign, campaign_media , base_type, vw_media_ots  
+        			WHERE
+            			campaign.c_no = campaign_media.c_no AND
+            			campaign.c_ctxt = #{cid} AND
+            			base_type.is_media = campaign_media.is_media AND
+            			base_type.dvsn_1_no = campaign_media.dvsn_1_no AND
+            			base_type.dvsn_2_no = campaign_media.dvsn_2_no AND 
+            			vw_media_ots.type = base_type.base AND
+            			vw_media_ots.m_id::integer = campaign_media.gid;
+		]]>			
+	</select>
+	
+	<select id="selectTableMidia" parameterType="EgovMap" resultType="EgovMap">
+		<if test="colsList != null and colsList.size != 0">
+		SELECT 
+		<foreach collection="colsList" item="c" separator=",">
+			<choose>
+				<when test="c == 0">max(dvsn_1_nm) as dvsn_1_nm</when>
+				<when test="c == 1">max(dvsn_2_nm) as dvsn_2_nm</when>
+				<when test="c == 2">max(media_id) as media_id</when>
+				<when test="c == 3">max(address) as address</when>
+				<when test="c == 4">sum(price) as price</when>
+				<when test="c == 5">sum(total_ots) as total_ots</when>
+				<when test="c == 6">sum(target_ots) as target_ots</when>
+			</choose>
+		</foreach>		
+		FROM(
+		</if>
+		<![CDATA[
+			SELECT vw_media_ots.tot as total_ots,
+		]]>
+		<foreach collection="targetList" item="t" open="(" close=") as target_ots," separator="+">
+			vw_media_ots.${t}
+		</foreach>
+		<![CDATA[  
+		dvsn_1_nm, dvsn_2_nm, price, address, shelter.media_id, pre_total_ots, pre_target_ots
+		]]>
+		<![CDATA[
+    		FROM campaign, campaign_media , base_type, vw_media_ots, shelter
+        		WHERE campaign.c_no = campaign_media.c_no AND 
+              		campaign.c_ctxt = #{cid} AND 
+              		base_type.is_media = campaign_media.is_media AND 
+              		base_type.dvsn_1_no = campaign_media.dvsn_1_no AND 
+              		base_type.dvsn_2_no = campaign_media.dvsn_2_no AND 
+              		vw_media_ots.type = base_type.base AND 
+              		shelter.gid = campaign_media.gid AND 
+              		vw_media_ots.m_id::integer = campaign_media.gid
+		]]>
+		<if test="colsList != null and colsList.size != 0">
+		)aa
+		<if test="noGroup == null">
+		group by 
+		</if>
+		<foreach collection="colsList" item="c" separator=",">
+			<choose>
+				<when test="c == 0">dvsn_1_nm</when>
+				<when test="c == 1">dvsn_2_nm</when>
+				<when test="c == 2">media_id</when>
+				<when test="c == 3">address</when>
+			</choose>
+		</foreach>	
+		</if>
+	</select>
+	
+	<select id="selectInterestFacility" parameterType="EgovMap" resultType="EgovMap">
+	<![CDATA[
+		SELECT C.c_no, 
+		       C.is_media, 
+		       C.dvsn_1_nm, 
+		       C.dvsn_2_nm, 
+		       C.base, 
+		       distance, 
+		       extract_type 
+		FROM   (SELECT A.c_no, 
+		               A.is_media, 
+		               A.dvsn_1_no, 
+		               B.dvsn_1_nm, 
+		               A.dvsn_2_no, 
+		               B.dvsn_2_nm, 
+		               B.base 
+		        FROM   campaign_media A 
+		               left outer join base_type B 
+		                            ON A.is_media = B.is_media 
+		                               AND A.dvsn_1_no = B.dvsn_1_no 
+		                               AND A.dvsn_2_no = B.dvsn_2_no 
+		        WHERE  c_no = (SELECT c_no 
+		                       FROM   campaign 
+		                       WHERE  c_ctxt = #{cid}) 
+		               AND A.is_media = 'facility') C 
+		       left outer join extract D 
+		                    ON C.dvsn_1_no = D.tg_dvsn_1_no 
+		                       AND C.dvsn_2_no = D.tg_dvsn_2_no 
+		                       AND C.c_no = D.c_no
+     ]]>   			  
+	</select>
+	
+	<select id="selectCampignDate" parameterType="EgovMap" resultType="EgovMap">
+		<![CDATA[
+			select s_dt, e_dt from campaign where c_ctxt=#{cid}
+		]]>
+	</select>
+	
+	<select id="selectCampignTargetingDate" parameterType="EgovMap" resultType="EgovMap">
+		<![CDATA[
+			SELECT S_DT, E_DT FROM CAMPAIGN_TARGETING WHERE C_NO = (SELECT C_NO FROM CAMPAIGN WHERE C_CTXT = #{cid}) AND IS_BASE = 'Y'  
+		]]>
+	</select>
+	
+	<select id="selectExtMediaList" parameterType="EgovMap" resultType="EgovMap">
+		<![CDATA[
+			select gid, base, c_ctxt
+    			from campaign, campaign_media, base_type
+        			where c_ctxt = #{cid}
+        			AND campaign.c_no = campaign_media.c_no
+        			AND campaign_media.dvsn_1_no = base_type.dvsn_1_no
+        			AND campaign_media.dvsn_2_no = base_type.dvsn_2_no
+        			AND base_type.is_media = 'media'
+		]]>
+	</select>
+	
+	<select id="selectExtOtherMediaList" parameterType="EgovMap" resultType="EgovMap">
+		<![CDATA[
+			select gid, base, c_ctxt
+    			from campaign, campaign_media, base_type
+        			where s_dt<= #{aftEdt}::TIMESTAMP
+        			AND e_dt >= #{sttSdt}::TIMESTAMP
+        			AND c_ctxt != #{cid}
+        			AND c_prgs_stts != '1'
+        			AND c_prgs_stts != '2'
+        			AND c_prgs_stts != '7'
+        			AND campaign.c_no = campaign_media.c_no
+        			AND campaign_media.dvsn_1_no = base_type.dvsn_1_no
+        			AND campaign_media.dvsn_2_no = base_type.dvsn_2_no
+        			AND base_type.is_media = 'media'
+		]]>
+	</select>
+	
+	<select id="selectExtOtherMediaListChkEdt" parameterType="EgovMap" resultType="EgovMap">
+		<![CDATA[
+			select gid, base, c_ctxt
+    			from campaign, campaign_media, base_type
+        			where s_dt<= #{nDate}::TIMESTAMP
+        			AND e_dt >= #{nDate}::TIMESTAMP
+        			AND c_ctxt != #{cid}
+        			AND c_prgs_stts != '1'
+        			AND c_prgs_stts != '2'
+        			AND c_prgs_stts != '7'
+        			AND campaign.c_no = campaign_media.c_no
+        			AND campaign_media.dvsn_1_no = base_type.dvsn_1_no
+        			AND campaign_media.dvsn_2_no = base_type.dvsn_2_no
+        			AND base_type.is_media = 'media'
+		]]>
+	</select>
+	
+	<update id="updateDateExtension" parameterType="EgovMap">
+		<![CDATA[
+			update campaign set e_dt = #{eDt}::TIMESTAMP where c_ctxt = #{cid}
+		]]>
+	</update>
+	
+	<update id="updateCampaignReservation" parameterType="EgovMap">
+		<![CDATA[
+			update campaign set c_prgs_stts = '3' where c_ctxt = #{cid}
+		]]>
+	</update>
+	
+	<update id="updateIsNew" parameterType="EgovMap">
+		UPDATE CAMPAIGN SET IS_NW = 'N' WHERE C_CTXT = #{cid} AND IS_NW = 'Y'
+	</update>
+	
+	<insert id="reqExtension" parameterType="EgovMap">
+		<![CDATA[
+			INSERT INTO REQ_EXTENTION(
+				r_no
+  				, c_ctxt
+  				, b_date
+				, n_date
+				, req_date
+				, req_advr
+				, r_prgs_stts
+			)
+			VALUES(
+				DEFAULT
+				, #{cid}
+				, TO_DATE(#{befEdt},'YYYY-MM-DD')
+				, TO_DATE(#{aftEdt},'YYYY-MM-DD')
+				, NOW()
+				, #{uid}
+				, 'I'
+			)
+		]]>
+	</insert>
+	
+	<delete id="delReqExtension" parameterType="EgovMap">
+		<![CDATA[
+			DELETE FROM REQ_EXTENTION WHERE c_ctxt = #{cid} and r_prgs_stts = 'I'
+		 ]]>
+	</delete>
+	
+	<select id="selectTargeting" parameterType="EgovMap" resultType="EgovMap">
+		<![CDATA[
+			SELECT TO_CHAR(S_DT,'YYYYMMDD') AS S_DATE, TO_CHAR(E_DT,'YYYYMMDD') AS E_DATE, T_AG, T_GNDR
+			FROM CAMPAIGN_TARGETING
+			WHERE C_NO = (SELECT C_NO FROM CAMPAIGN WHERE C_CTXT = #{cid})
+			AND IS_BASE = 'Y'  
+		]]>
+	</select>
+	
+	<select id="selectCampaignGid" parameterType="EgovMap" resultType="EgovMap">
+		SELECT GID, DVSN_1_NO, DVSN_2_NO FROM CAMPAIGN_MEDIA AS A
+		JOIN CAMPAIGN AS B
+		ON A.C_NO = B.C_NO
+		WHERE B.C_CTXT = #{cCtxt}
+	</select>
+	
+	<select id="selectFileCk" resultType="EgovMap" parameterType="EgovMap">
+		<if test="base.equals('intro')">
+			SELECT C.GID
+			FROM CAMPAIGN A, CAMPAIGN_MEDIA B, INTRODUCTION C
+			WHERE A.C_CTXT = #{cCtxt}
+			AND A.C_NO = B.C_NO
+			AND C.DVSN_1_NO = B.DVSN_1_NO
+			AND C.DVSN_2_NO = B.DVSN_2_NO
+			AND C.GID = B.GID
+		</if>
+		<if test="base.equals('making')">
+			SELECT C.GID
+			FROM CAMPAIGN A, CAMPAIGN_MEDIA B, MAKEING_GUIDE C
+			WHERE A.C_CTXT = #{cCtxt}
+			AND A.C_NO = B.C_NO
+			AND C.DVSN_1_NO = B.DVSN_1_NO
+			AND C.DVSN_2_NO = B.DVSN_2_NO
+			AND C.GID = B.GID
+		</if>
+	</select>
+	
+	<select id="selectIntroduceFileList" parameterType="EgovMap" resultType="EgovMap">
+		SELECT FILE_ORG_NAME, FILE_SVR_NAME FROM INTRODUCTION WHERE FILE_NO =(SELECT MAX(FILE_NO) FROM INTRODUCTION WHERE GID = ${gid} AND DVSN_1_NO = ${dvsn1No} AND DVSN_2_NO = ${dvsn2No})
+	</select>
+	
+	<select id="selectMakingGuideFileList" parameterType="EgovMap" resultType="EgovMap">
+		SELECT FILE_ORG_NAME, FILE_SVR_NAME FROM MAKEING_GUIDE WHERE FILE_NO = (SELECT MAX(FILE_NO) FROM MAKEING_GUIDE WHERE GID = ${gid} AND DVSN_1_NO = ${dvsn1No} AND DVSN_2_NO = ${dvsn2No})
+	</select>
+</mapper>
